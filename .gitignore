@@ -3,3 +3,6 @@ node_modules/
 .DS_Store
 .npm-cache/
 server.log
+uploads/
+backups/*.tar.gz
+backups/*.sha256

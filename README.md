@@ -124,3 +124,100 @@ If using TrueNAS UI custom app:
 - Upgrade: `docker compose pull && docker compose up -d`
 - Logs: `docker compose logs -f manatee`
 - Backup: snapshot/backup the `data` and `uploads` datasets
+
+## TrueNAS Cutover Runbook (Local -> NAS)
+
+Use this sequence to migrate safely and only remove local dev after validation.
+
+### A) Create migration package on local machine
+
+From project root:
+
+```bash
+./scripts/export-for-truenas.sh
+```
+
+This creates:
+
+- `backups/truenas-export-<timestamp>.tar.gz`
+- `backups/truenas-export-<timestamp>.tar.gz.sha256`
+
+### B) Prepare TrueNAS datasets
+
+In TrueNAS SCALE UI:
+
+1. Create parent dataset, for example `apps/manatee`.
+2. Under it, create:
+  - `apps/manatee/data`
+  - `apps/manatee/uploads`
+
+### C) Copy and restore export onto TrueNAS host
+
+Copy archive to NAS (SCP/SFTP), then on NAS shell:
+
+```bash
+mkdir -p /mnt/<POOL>/apps/manatee/migration
+cp truenas-export-<timestamp>.tar.gz /mnt/<POOL>/apps/manatee/migration/
+```
+
+Extract and restore using script (if project files are available on NAS), or manually copy folders from extracted archive:
+
+```bash
+tar -xzf /mnt/<POOL>/apps/manatee/migration/truenas-export-<timestamp>.tar.gz -C /mnt/<POOL>/apps/manatee/migration
+```
+
+From extracted export, copy:
+
+- `data/*` -> `/mnt/<POOL>/apps/manatee/data/`
+- `uploads/*` -> `/mnt/<POOL>/apps/manatee/uploads/`
+
+### D) Deploy app in TrueNAS SCALE
+
+Use either custom app compose or app catalog path. Required mappings:
+
+- Host path `/mnt/<POOL>/apps/manatee/data` -> container `/app/data`
+- Host path `/mnt/<POOL>/apps/manatee/uploads` -> container `/app/src/public/uploads`
+
+Set environment variables:
+
+- `NODE_ENV=production`
+- `PORT=3000`
+- `SESSION_SECRET=<strong random string>`
+- `BASE_URL=https://<your-domain-or-ip>`
+- `TRUST_PROXY=1` (if behind reverse proxy)
+- `SESSION_COOKIE_SECURE=true` (if HTTPS)
+- `SESSION_COOKIE_SAMESITE=lax`
+
+### E) Validate before local shutdown
+
+1. Open app URL on TrueNAS and log in as admin.
+2. Confirm users, requests, relationships, and history are present.
+3. Upload a logo on Theme page to verify uploads persistence.
+4. Restart app once from TrueNAS and verify data still present.
+
+Only after all checks pass should you stop local dev.
+
+### F) Enable FTP access for uploads/data
+
+In TrueNAS SCALE:
+
+1. Create a dedicated user (example: `manateeftp`).
+2. Grant permissions on:
+  - `/mnt/<POOL>/apps/manatee/uploads`
+  - optionally `/mnt/<POOL>/apps/manatee/data` (only if you want DB file access)
+3. Go to Services -> FTP, enable and configure:
+  - Root/default path to `/mnt/<POOL>/apps/manatee`
+  - Passive port range (for example `30000-30100`)
+  - TLS enabled if external access is required
+4. Open required firewall/NAT ports.
+
+Security note: avoid exposing database path over FTP unless strictly required.
+
+### G) Remove local dev environment (after successful cutover)
+
+Recommended order:
+
+1. Keep GitHub backup and local bundle backup.
+2. Stop any local Node process.
+3. Archive local project folder.
+4. Remove local working copy only after a final NAS restart+retest.
