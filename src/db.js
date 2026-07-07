@@ -41,7 +41,6 @@ const THEME_DEFAULTS = {
 function initializeDatabase() {
   repairBrokenUserForeignKeys();
   migrateUsersRoleConstraintForBoth();
-  ensureUserNameColumns();
 
   db.exec(`
     CREATE TABLE IF NOT EXISTS users (
@@ -147,6 +146,9 @@ function initializeDatabase() {
       FOREIGN KEY (actor_user_id) REFERENCES users(id) ON DELETE SET NULL
     );
   `);
+
+  // On a fresh database, create base tables first, then run additive column migrations.
+  ensureUserNameColumns();
 
   const adminExists = db.prepare("SELECT id FROM users WHERE role='admin' AND email='admin'").get();
   if (!adminExists) {
