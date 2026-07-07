@@ -1,0 +1,20 @@
+services:
+  manatee:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: manatee
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - TRUST_PROXY=1
+      - SESSION_COOKIE_SECURE=true
+      - SESSION_COOKIE_SAMESITE=lax
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./data:/app/data
+      - ./uploads:/app/src/public/uploads

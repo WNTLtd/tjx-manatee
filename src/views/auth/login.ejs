@@ -1,0 +1,25 @@
+<%- include("../partials/head", { title: "Login" }) %>
+<%- include("../partials/header") %>
+<main class="container auth-wrap">
+  <section class="card">
+    <h1>Login</h1>
+    <%- include("../partials/flash") %>
+    <form method="post" action="/login" class="form-grid" autocomplete="on">
+      <label>Email or Admin
+        <input name="email" required autocomplete="username" />
+      </label>
+      <label>Password
+        <div class="password-row">
+          <input id="login-password" type="password" name="password" required autocomplete="current-password" />
+          <button type="button" class="btn ghost toggle-password" data-target="login-password">Show</button>
+        </div>
+      </label>
+      <button type="submit" class="btn">Login</button>
+    </form>
+    <div class="row-links">
+      <a href="/forgot-password">Forgot password?</a>
+      <a href="/register">Create account</a>
+    </div>
+  </section>
+</main>
+<%- include("../partials/footer") %>

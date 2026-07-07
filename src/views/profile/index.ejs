@@ -1,0 +1,79 @@
+<%- include("../partials/head", { title: "Account Settings" }) %>
+<%- include("../partials/header") %>
+<main class="container">
+  <h1>Account Settings</h1>
+  <%- include("../partials/flash") %>
+
+  <section class="card" style="margin-bottom: 1rem;">
+    <h2>Personal Details</h2>
+    <form method="post" action="/profile/details" class="form-grid" autocomplete="off">
+      <label>Title
+        <select name="title">
+          <option value="" <%= !user.title ? 'selected' : '' %>>Select title</option>
+          <option value="Mr" <%= user.title === 'Mr' ? 'selected' : '' %>>Mr</option>
+          <option value="Mrs" <%= user.title === 'Mrs' ? 'selected' : '' %>>Mrs</option>
+          <option value="Ms" <%= user.title === 'Ms' ? 'selected' : '' %>>Ms</option>
+          <option value="Miss" <%= user.title === 'Miss' ? 'selected' : '' %>>Miss</option>
+          <option value="Mx" <%= user.title === 'Mx' ? 'selected' : '' %>>Mx</option>
+          <option value="Dr" <%= user.title === 'Dr' ? 'selected' : '' %>>Dr</option>
+          <option value="Prof" <%= user.title === 'Prof' ? 'selected' : '' %>>Prof</option>
+          <option value="Rev" <%= user.title === 'Rev' ? 'selected' : '' %>>Rev</option>
+        </select>
+      </label>
+      <label>Pronouns
+        <select name="pronouns">
+          <option value="" <%= !user.pronouns ? 'selected' : '' %>>Select pronouns</option>
+          <option value="she/her" <%= user.pronouns === 'she/her' ? 'selected' : '' %>>she/her</option>
+          <option value="he/him" <%= user.pronouns === 'he/him' ? 'selected' : '' %>>he/him</option>
+          <option value="they/them" <%= user.pronouns === 'they/them' ? 'selected' : '' %>>they/them</option>
+          <option value="she/they" <%= user.pronouns === 'she/they' ? 'selected' : '' %>>she/they</option>
+          <option value="he/they" <%= user.pronouns === 'he/they' ? 'selected' : '' %>>he/they</option>
+          <option value="ze/zir" <%= user.pronouns === 'ze/zir' ? 'selected' : '' %>>ze/zir</option>
+          <option value="prefer not to say" <%= user.pronouns === 'prefer not to say' ? 'selected' : '' %>>Prefer not to say</option>
+        </select>
+      </label>
+      <label>First name
+        <input type="text" name="first_name" value="<%= user.first_name || '' %>" required />
+      </label>
+      <label>Surname
+        <input type="text" name="surname" value="<%= user.surname || '' %>" required />
+      </label>
+      <label>Job title
+        <input type="text" name="job_title" value="<%= user.job_title || '' %>" />
+      </label>
+      <button class="btn" type="submit">Update Personal Details</button>
+    </form>
+  </section>
+
+  <section class="grid-2">
+    <article class="card">
+      <h2>Change Email</h2>
+      <form method="post" action="/profile/email" class="form-grid" autocomplete="off">
+        <label>New Email
+          <input type="text" name="email" value="<%= user.email %>" required />
+        </label>
+        <button class="btn" type="submit">Update Email</button>
+      </form>
+    </article>
+
+    <article class="card">
+      <h2>Change Password</h2>
+      <form method="post" action="/profile/password" class="form-grid" autocomplete="on">
+        <label>Current Password
+          <div class="password-row">
+            <input id="current-password" type="password" name="currentPassword" required autocomplete="current-password" />
+            <button type="button" class="btn ghost toggle-password" data-target="current-password">Show</button>
+          </div>
+        </label>
+        <label>New Password
+          <div class="password-row">
+            <input id="new-password" type="password" name="newPassword" minlength="6" required autocomplete="new-password" />
+            <button type="button" class="btn ghost toggle-password" data-target="new-password">Show</button>
+          </div>
+        </label>
+        <button class="btn" type="submit">Update Password</button>
+      </form>
+    </article>
+  </section>
+</main>
+<%- include("../partials/footer") %>

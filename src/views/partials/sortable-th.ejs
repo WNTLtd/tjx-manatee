@@ -1,0 +1,16 @@
+<%
+  const sortState = typeof sort !== "undefined" && sort ? sort : null;
+  const upHref = sortState && typeof sortState.hrefFor === "function" ? sortState.hrefFor(key, "asc") : "#";
+  const downHref = sortState && typeof sortState.hrefFor === "function" ? sortState.hrefFor(key, "desc") : "#";
+  const upActive = sortState?.key === key && sortState?.dir === "asc";
+  const downActive = sortState?.key === key && sortState?.dir === "desc";
+%>
+<th>
+  <div class="sort-head">
+    <span><%= label %></span>
+    <span class="sort-arrows">
+      <a href="<%= upHref %>" class="sort-arrow <%= upActive ? 'active' : '' %>" aria-label="Sort <%= label %> ascending">↑</a>
+      <a href="<%= downHref %>" class="sort-arrow <%= downActive ? 'active' : '' %>" aria-label="Sort <%= label %> descending">↓</a>
+    </span>
+  </div>
+</th>

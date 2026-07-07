@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= title %> | Manatee</title>
+    <% if (theme) { %>
+      <style>
+        :root {
+          --bg: <%= theme.bg_color %>;
+          --paper: <%= theme.paper_color %>;
+          --ink: <%= theme.ink_color %>;
+          --accent: <%= theme.accent_color %>;
+          --accent-2: <%= theme.accent_2_color %>;
+          --danger: <%= theme.danger_color %>;
+          --warning: <%= theme.warning_color %>;
+          --muted: <%= theme.muted_color %>;
+          --line: <%= theme.line_color %>;
+          --bg-soft: <%= theme.bg_soft_color %>;
+          --header-start: <%= theme.header_start_color %>;
+          --header-end: <%= theme.header_end_color %>;
+          --field-border: <%= theme.field_border_color %>;
+          --surface: <%= theme.surface_color %>;
+          --btn-text: <%= theme.btn_text_color %>;
+          --btn-disabled-bg: <%= theme.btn_disabled_bg_color %>;
+          --btn-disabled-text: <%= theme.btn_disabled_text_color %>;
+          --flash-success-bg: <%= theme.flash_success_bg_color %>;
+          --flash-success-text: <%= theme.flash_success_text_color %>;
+          --flash-error-bg: <%= theme.flash_error_bg_color %>;
+          --flash-error-text: <%= theme.flash_error_text_color %>;
+          --danger-soft: <%= theme.danger_soft_color %>;
+        }
+      </style>
+    <% } %>
+    <link rel="stylesheet" href="/css/styles.css" />
+  </head>
+  <body>

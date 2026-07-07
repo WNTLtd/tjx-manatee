@@ -1,0 +1,102 @@
+<%- include("../partials/head", { title: "Theme Settings" }) %>
+<%- include("../partials/header") %>
+<main class="container">
+  <div class="inline-form wrap page-head-row">
+    <h1>Theme Settings</h1>
+    <div class="inline-form wrap">
+      <a class="btn ghost" href="/admin/smtp">SMTP Settings</a>
+      <a class="btn ghost" href="/admin">Back to Dashboard</a>
+    </div>
+  </div>
+  <%- include("../partials/flash") %>
+
+  <section class="card" style="margin-bottom: 1rem;">
+    <h2>Site Colors</h2>
+    <p class="hint">Use six-digit hex codes, for example: #c8102e</p>
+    <form method="post" action="/admin/theme" class="form-grid theme-grid" autocomplete="off">
+      <label>Background
+        <input name="bg_color" value="<%= theme.bg_color %>" pattern="^#[0-9a-fA-F]{6}$" required />
+      </label>
+      <label>Background Accent
+        <input name="bg_soft_color" value="<%= theme.bg_soft_color %>" pattern="^#[0-9a-fA-F]{6}$" required />
+      </label>
+      <label>Card Background
+        <input name="paper_color" value="<%= theme.paper_color %>" pattern="^#[0-9a-fA-F]{6}$" required />
+      </label>
+      <label>Surface / Inputs
+        <input name="surface_color" value="<%= theme.surface_color %>" pattern="^#[0-9a-fA-F]{6}$" required />
+      </label>
+      <label>Header Gradient Start
+        <input name="header_start_color" value="<%= theme.header_start_color %>" pattern="^#[0-9a-fA-F]{6}$" required />
+      </label>
+      <label>Header Gradient End
+        <input name="header_end_color" value="<%= theme.header_end_color %>" pattern="^#[0-9a-fA-F]{6}$" required />
+      </label>
+      <label>Main Text
+        <input name="ink_color" value="<%= theme.ink_color %>" pattern="^#[0-9a-fA-F]{6}$" required />
+      </label>
+      <label>Muted Text
+        <input name="muted_color" value="<%= theme.muted_color %>" pattern="^#[0-9a-fA-F]{6}$" required />
+      </label>
+      <label>Primary Accent
+        <input name="accent_color" value="<%= theme.accent_color %>" pattern="^#[0-9a-fA-F]{6}$" required />
+      </label>
+      <label>Secondary Accent
+        <input name="accent_2_color" value="<%= theme.accent_2_color %>" pattern="^#[0-9a-fA-F]{6}$" required />
+      </label>
+      <label>Warning
+        <input name="warning_color" value="<%= theme.warning_color %>" pattern="^#[0-9a-fA-F]{6}$" required />
+      </label>
+      <label>Danger
+        <input name="danger_color" value="<%= theme.danger_color %>" pattern="^#[0-9a-fA-F]{6}$" required />
+      </label>
+      <label>Danger Border Soft
+        <input name="danger_soft_color" value="<%= theme.danger_soft_color %>" pattern="^#[0-9a-fA-F]{6}$" required />
+      </label>
+      <label>Line / Border
+        <input name="line_color" value="<%= theme.line_color %>" pattern="^#[0-9a-fA-F]{6}$" required />
+      </label>
+      <label>Input Border
+        <input name="field_border_color" value="<%= theme.field_border_color %>" pattern="^#[0-9a-fA-F]{6}$" required />
+      </label>
+      <label>Button Text
+        <input name="btn_text_color" value="<%= theme.btn_text_color %>" pattern="^#[0-9a-fA-F]{6}$" required />
+      </label>
+      <label>Disabled Button Background
+        <input name="btn_disabled_bg_color" value="<%= theme.btn_disabled_bg_color %>" pattern="^#[0-9a-fA-F]{6}$" required />
+      </label>
+      <label>Disabled Button Text
+        <input name="btn_disabled_text_color" value="<%= theme.btn_disabled_text_color %>" pattern="^#[0-9a-fA-F]{6}$" required />
+      </label>
+      <label>Success Background
+        <input name="flash_success_bg_color" value="<%= theme.flash_success_bg_color %>" pattern="^#[0-9a-fA-F]{6}$" required />
+      </label>
+      <label>Success Text
+        <input name="flash_success_text_color" value="<%= theme.flash_success_text_color %>" pattern="^#[0-9a-fA-F]{6}$" required />
+      </label>
+      <label>Error Background
+        <input name="flash_error_bg_color" value="<%= theme.flash_error_bg_color %>" pattern="^#[0-9a-fA-F]{6}$" required />
+      </label>
+      <label>Error Text
+        <input name="flash_error_text_color" value="<%= theme.flash_error_text_color %>" pattern="^#[0-9a-fA-F]{6}$" required />
+      </label>
+      <button class="btn" type="submit">Save Theme</button>
+    </form>
+  </section>
+
+  <section class="card">
+    <h2>Company Logo</h2>
+    <% if (theme.logo_path) { %>
+      <div class="theme-logo-preview">
+        <img src="<%= theme.logo_path %>" alt="Current company logo" />
+      </div>
+    <% } else { %>
+      <p class="hint">No logo uploaded yet.</p>
+    <% } %>
+    <form method="post" action="/admin/theme/logo" enctype="multipart/form-data" class="inline-form wrap" autocomplete="off">
+      <input type="file" name="company_logo" accept="image/*" required />
+      <button class="btn" type="submit">Upload Company Logo</button>
+    </form>
+  </section>
+</main>
+<%- include("../partials/footer") %>

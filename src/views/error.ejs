@@ -1,0 +1,8 @@
+<%- include("partials/head", { title: title || "Error" }) %>
+<%- include("partials/header") %>
+<main class="container">
+  <h1><%= title || "Error" %></h1>
+  <p><%= message || "An error occurred." %></p>
+  <a class="btn" href="/">Back</a>
+</main>
+<%- include("partials/footer") %>

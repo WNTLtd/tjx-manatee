@@ -1,0 +1,52 @@
+<%- include("../partials/head", { title: "Pending Requests" }) %>
+<%- include("../partials/header") %>
+<main class="container">
+  <div class="inline-form wrap page-head-row">
+    <h1>Pending Requests</h1>
+    <div class="inline-form wrap">
+      <a class="btn ghost" href="/admin/users?role=mentor">Mentors</a>
+      <a class="btn ghost" href="/admin/users?role=mentee">Mentees</a>
+      <a class="btn ghost" href="/admin/relationships">Live Relationships</a>
+      <a class="btn ghost" href="/admin">Back to Admin</a>
+    </div>
+  </div>
+  <%- include("../partials/flash") %>
+
+  <section class="card">
+    <% if (!requests || requests.length === 0) { %>
+      <p>No pending requests.</p>
+    <% } else { %>
+      <table>
+        <thead>
+          <tr>
+            <%- include("../partials/sortable-th", { sort, key: "id", label: "ID" }) %>
+            <%- include("../partials/sortable-th", { sort, key: "mentee_name", label: "Mentee" }) %>
+            <%- include("../partials/sortable-th", { sort, key: "mentor_name", label: "Mentor" }) %>
+            <%- include("../partials/sortable-th", { sort, key: "location_name", label: "Location" }) %>
+            <%- include("../partials/sortable-th", { sort, key: "section_name", label: "Function" }) %>
+            <%- include("../partials/sortable-th", { sort, key: "created_at", label: "Created" }) %>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% requests.forEach((row) => { %>
+            <tr>
+              <td><%= row.id %></td>
+              <td><%= row.mentee_name %></td>
+              <td><%= row.mentor_name %></td>
+              <td><%= row.location_name || '-' %></td>
+              <td><%= row.section_name || '-' %></td>
+              <td><%= row.created_at %></td>
+              <td>
+                <form method="post" action="/admin/requests/<%= row.id %>/resend">
+                  <button class="btn" type="submit">Resend Request</button>
+                </form>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    <% } %>
+  </section>
+</main>
+<%- include("../partials/footer") %>

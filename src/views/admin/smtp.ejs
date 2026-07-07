@@ -1,0 +1,40 @@
+<%- include("../partials/head", { title: "SMTP Settings" }) %>
+<%- include("../partials/header") %>
+<main class="container">
+  <div class="inline-form wrap page-head-row">
+    <h1>SMTP Settings</h1>
+    <div class="inline-form wrap">
+      <a class="btn ghost" href="/admin">Back to Dashboard</a>
+    </div>
+  </div>
+  <%- include("../partials/flash") %>
+
+  <section class="card">
+    <h2>SMTP and Email Logging</h2>
+    <form method="post" action="/admin/smtp" class="form-grid" autocomplete="off" data-lpignore="true" data-1p-ignore="true">
+      <label>SMTP Host <input name="host" value="<%= smtp?.host || '' %>" autocomplete="off" /></label>
+      <label>SMTP Port <input name="port" type="number" value="<%= smtp?.port || '' %>" autocomplete="off" /></label>
+      <label>SMTP User <input name="smtp_user" value="<%= smtp?.user || '' %>" autocomplete="off" data-lpignore="true" data-1p-ignore="true" /></label>
+      <label>SMTP Password
+        <div class="password-row">
+          <input id="smtp-pass" type="password" name="smtp_password" value="<%= smtp?.pass || '' %>" autocomplete="new-password" data-lpignore="true" data-1p-ignore="true" />
+          <button type="button" class="btn ghost toggle-password" data-target="smtp-pass">Show</button>
+        </div>
+      </label>
+      <label>From Email <input type="email" name="from_email" value="<%= smtp?.from_email || '' %>" autocomplete="off" /></label>
+      <label>BCC Logging Email <input type="email" name="bcc_email" value="<%= smtp?.bcc_email || '' %>" autocomplete="off" /></label>
+      <label class="check-row"><input type="checkbox" name="secure" <%= smtp?.secure ? 'checked' : '' %> /> Use TLS/SSL</label>
+      <button class="btn" type="submit">Save SMTP Settings</button>
+    </form>
+
+    <hr />
+
+    <form method="post" action="/admin/smtp/test" class="form-grid" autocomplete="off">
+      <label>Test Recipient Email
+        <input type="email" name="test_to" value="<%= currentUser?.email || '' %>" required autocomplete="off" />
+      </label>
+      <button class="btn warning" type="submit">Test Settings</button>
+    </form>
+  </section>
+</main>
+<%- include("../partials/footer") %>

@@ -1,0 +1,58 @@
+<%- include("../partials/head", { title: "Users" }) %>
+<%- include("../partials/header") %>
+<main class="container">
+  <div class="inline-form wrap page-head-row">
+    <h1>Users <%= roleFilter ? `(${roleFilter})` : '' %></h1>
+    <div class="inline-form wrap">
+      <a class="btn ghost" href="/admin/requests">Pending Requests</a>
+      <a class="btn ghost" href="/admin/relationships">Live Relationships</a>
+      <a class="btn ghost" href="/admin/history">Relationship History</a>
+      <a class="btn ghost" href="/admin">Back to Admin</a>
+    </div>
+  </div>
+  <%- include("../partials/flash") %>
+
+  <section class="card">
+    <% if (!users || users.length === 0) { %>
+      <p>No users found.</p>
+    <% } else { %>
+      <table>
+        <thead>
+          <tr>
+            <%- include("../partials/sortable-th", { sort, key: "id", label: "ID" }) %>
+            <%- include("../partials/sortable-th", { sort, key: "user_name", label: "Name" }) %>
+            <%- include("../partials/sortable-th", { sort, key: "role", label: "Role" }) %>
+            <%- include("../partials/sortable-th", { sort, key: "location_name", label: "Location" }) %>
+            <%- include("../partials/sortable-th", { sort, key: "active_mentor_count", label: "Active as Mentor" }) %>
+            <%- include("../partials/sortable-th", { sort, key: "active_mentee_count", label: "Active as Mentee" }) %>
+            <%- include("../partials/sortable-th", { sort, key: "created_at", label: "Created" }) %>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% users.forEach((user) => { %>
+            <tr>
+              <td><%= user.id %></td>
+              <td><%= user.user_name %></td>
+              <td><%= user.role %></td>
+              <td><%= user.location_name || '-' %></td>
+              <td><%= user.active_mentor_count %></td>
+              <td><%= user.active_mentee_count %></td>
+              <td><%= user.created_at %></td>
+              <td>
+                <% if (user.role === 'admin') { %>
+                  <span>-</span>
+                <% } else { %>
+                  <form method="post" action="/admin/users/<%= user.id %>/delete" onsubmit="return confirm('Delete this user and all related data? This cannot be undone.');">
+                    <button class="btn danger" type="submit">Delete User</button>
+                  </form>
+                <% } %>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    <% } %>
+  </section>
+</main>
+<%- include("../partials/footer") %>

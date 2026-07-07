@@ -1,0 +1,70 @@
+<%- include("../partials/head", { title: "Audit Log" }) %>
+<%- include("../partials/header") %>
+<main class="container">
+  <div class="inline-form wrap page-head-row">
+    <h1>Audit Log</h1>
+    <div class="inline-form wrap">
+      <a class="btn ghost" href="/admin">Back to Admin</a>
+    </div>
+  </div>
+  <%- include("../partials/flash") %>
+
+  <section class="card" style="margin-bottom: 1rem;">
+    <h2>Filters</h2>
+    <form method="get" action="/admin/audit" class="inline-form wrap">
+      <label>Event Type
+        <input name="eventType" value="<%= filters.eventType || '' %>" placeholder="smtp_test" />
+      </label>
+      <label>Status
+        <select name="status">
+          <option value="" <%= !filters.status ? 'selected' : '' %>>All</option>
+          <option value="sent" <%= filters.status === 'sent' ? 'selected' : '' %>>sent</option>
+          <option value="failed" <%= filters.status === 'failed' ? 'selected' : '' %>>failed</option>
+        </select>
+      </label>
+      <label>Recipient
+        <input name="recipient" value="<%= filters.recipient || '' %>" placeholder="name@domain.com" />
+      </label>
+      <label>From Date
+        <input type="date" name="fromDate" value="<%= filters.fromDate || '' %>" />
+      </label>
+      <label>To Date
+        <input type="date" name="toDate" value="<%= filters.toDate || '' %>" />
+      </label>
+      <button class="btn" type="submit">Apply Filters</button>
+      <a class="btn ghost" href="/admin/audit">Clear</a>
+    </form>
+  </section>
+
+  <section class="card">
+    <% if (!logs || logs.length === 0) { %>
+      <p>No audit entries found for current filters.</p>
+    <% } else { %>
+      <table>
+        <thead>
+          <tr>
+            <%- include("../partials/sortable-th", { sort, key: "created_at", label: "Time" }) %>
+            <%- include("../partials/sortable-th", { sort, key: "status", label: "Status" }) %>
+            <%- include("../partials/sortable-th", { sort, key: "event_type", label: "Event" }) %>
+            <%- include("../partials/sortable-th", { sort, key: "recipient_email", label: "Recipient" }) %>
+            <%- include("../partials/sortable-th", { sort, key: "subject", label: "Subject" }) %>
+            <th>Details</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% logs.forEach((log) => { %>
+            <tr>
+              <td><%= log.created_at %></td>
+              <td><%= log.status %></td>
+              <td><%= log.event_type || '-' %></td>
+              <td><%= log.recipient_email || '-' %></td>
+              <td><%= log.subject || '-' %></td>
+              <td><%= log.error_message || '-' %></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    <% } %>
+  </section>
+</main>
+<%- include("../partials/footer") %>

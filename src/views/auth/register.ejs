@@ -1,0 +1,24 @@
+<%- include("../partials/head", { title: "Register" }) %>
+<%- include("../partials/header") %>
+<main class="container auth-wrap">
+  <section class="card">
+    <h1>
+      <%= role === "mentor" ? "Mentor" : role === "mentee" ? "Mentee" : "Mentor + Mentee" %> Sign Up
+    </h1>
+    <%- include("../partials/flash") %>
+    <form method="post" action="/register/<%= role %>" class="form-grid" autocomplete="on">
+      <label>Email
+        <input type="email" name="email" required autocomplete="email" />
+      </label>
+      <label>Password
+        <div class="password-row">
+          <input id="register-password" type="password" name="password" required minlength="6" autocomplete="new-password" />
+          <button type="button" class="btn ghost toggle-password" data-target="register-password">Show</button>
+        </div>
+      </label>
+      <button type="submit" class="btn">Create Account</button>
+    </form>
+    <a href="/login">Back to login</a>
+  </section>
+</main>
+<%- include("../partials/footer") %>

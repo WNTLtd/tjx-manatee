@@ -1,0 +1,55 @@
+<%- include("../partials/head", { title: "Relationship History" }) %>
+<%- include("../partials/header") %>
+<main class="container">
+  <div class="inline-form wrap page-head-row">
+    <h1>Relationship History</h1>
+    <div class="inline-form wrap">
+      <a class="btn ghost" href="/admin/users">Users</a>
+      <a class="btn" href="/admin/history/export">Export CSV</a>
+      <a class="btn ghost" href="/admin">Back to Admin</a>
+    </div>
+  </div>
+  <%- include("../partials/flash") %>
+
+  <section class="card">
+    <% if (!rows || rows.length === 0) { %>
+      <p>No relationship history available yet.</p>
+    <% } else { %>
+      <table>
+        <thead>
+          <tr>
+            <%- include("../partials/sortable-th", { sort, key: "id", label: "ID" }) %>
+            <%- include("../partials/sortable-th", { sort, key: "status", label: "Status" }) %>
+            <%- include("../partials/sortable-th", { sort, key: "mentor_name", label: "Mentor" }) %>
+            <%- include("../partials/sortable-th", { sort, key: "mentee_name", label: "Mentee" }) %>
+            <%- include("../partials/sortable-th", { sort, key: "location_name", label: "Location" }) %>
+            <%- include("../partials/sortable-th", { sort, key: "section_name", label: "Function" }) %>
+            <%- include("../partials/sortable-th", { sort, key: "end_reason_name", label: "End Reason" }) %>
+            <%- include("../partials/sortable-th", { sort, key: "ended_by_name", label: "Ended By" }) %>
+            <%- include("../partials/sortable-th", { sort, key: "mentor_message", label: "Mentor Message" }) %>
+            <%- include("../partials/sortable-th", { sort, key: "created_at", label: "Created" }) %>
+            <%- include("../partials/sortable-th", { sort, key: "updated_at", label: "Updated" }) %>
+          </tr>
+        </thead>
+        <tbody>
+          <% rows.forEach((row) => { %>
+            <tr>
+              <td><%= row.id %></td>
+              <td><%= row.status %></td>
+              <td><%= row.mentor_name %></td>
+              <td><%= row.mentee_name %></td>
+              <td><%= row.location_name || '-' %></td>
+              <td><%= row.section_name || '-' %></td>
+              <td><%= row.end_reason_name || '-' %></td>
+              <td><%= row.ended_by_name || '-' %></td>
+              <td><%= row.mentor_message || '-' %></td>
+              <td><%= row.created_at %></td>
+              <td><%= row.updated_at %></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    <% } %>
+  </section>
+</main>
+<%- include("../partials/footer") %>

@@ -1,0 +1,127 @@
+<%- include("../partials/head", { title: "Mentee Dashboard" }) %>
+<%- include("../partials/header") %>
+<main class="container">
+  <div class="inline-form wrap page-head-row">
+    <h1>Mentee Dashboard</h1>
+    <a class="btn ghost" href="/manuals/mentee-manual.html" target="_blank" rel="noopener noreferrer">Mentee Manual</a>
+  </div>
+  <%- include("../partials/flash") %>
+
+  <section class="card">
+    <h2>Your Profile</h2>
+    <form method="post" action="/mentee/profile" class="inline-form wrap">
+      <label>Title
+        <input name="title" value="<%= profile?.title || '' %>" placeholder="Ms, Mr, Dr..." />
+      </label>
+      <label>First name
+        <input name="first_name" value="<%= profile?.first_name || '' %>" required />
+      </label>
+      <label>Surname
+        <input name="surname" value="<%= profile?.surname || '' %>" required />
+      </label>
+      <label>Job title
+        <input name="job_title" value="<%= profile?.job_title || '' %>" />
+      </label>
+      <label>Location
+        <select name="location_id" required>
+          <option value="">Select location</option>
+          <% locations.forEach((location) => { %>
+            <option value="<%= location.id %>" <%= profile?.location_id === location.id ? 'selected' : '' %>><%= location.name %></option>
+          <% }) %>
+        </select>
+      </label>
+      <button class="btn" type="submit">Update Location</button>
+    </form>
+  </section>
+
+  <section class="card">
+    <h2>Find Mentors</h2>
+    <% if (!profile?.location_id) { %>
+      <p>Set your location first to find mentors.</p>
+    <% } else { %>
+      <form method="get" action="/mentee" class="inline-form wrap">
+        <label>Function
+          <select name="section_id" required>
+            <option value="">Select function</option>
+            <% sections.forEach((section) => { %>
+              <option value="<%= section.id %>" <%= selectedSectionId === section.id ? 'selected' : '' %>><%= section.name %></option>
+            <% }) %>
+          </select>
+        </label>
+        <button class="btn" type="submit">Show Available Mentors</button>
+      </form>
+
+      <% if (selectedSectionId) { %>
+        <% if (availableMentors.length === 0) { %>
+          <p>No available mentors found for your location and selected function.</p>
+        <% } else { %>
+          <ul class="item-list mentors">
+            <% availableMentors.forEach((mentor) => { %>
+              <li>
+                <div>
+                  <strong><%= mentor.email %></strong>
+                  <p>Location: <%= mentor.location_name || 'N/A' %></p>
+                </div>
+                <form method="post" action="/mentee/request-mentor">
+                  <input type="hidden" name="mentor_id" value="<%= mentor.id %>" />
+                  <input type="hidden" name="section_id" value="<%= selectedSectionId %>" />
+                  <button class="btn" type="submit">Request Mentorship</button>
+                </form>
+              </li>
+            <% }) %>
+          </ul>
+        <% } %>
+      <% } %>
+    <% } %>
+  </section>
+
+  <section class="card">
+    <h2>Your Mentorships</h2>
+    <% if (mentorships.length === 0) { %>
+      <p>No mentorships yet.</p>
+    <% } else { %>
+      <table>
+        <thead>
+          <tr>
+            <th>Mentor</th><th>Function</th><th>Status</th><th>Reason</th><th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% mentorships.forEach((item) => { %>
+            <tr>
+              <td><%= item.mentor_email %></td>
+              <td><%= item.section_name || 'N/A' %></td>
+              <td><%= item.status %></td>
+              <td><%= item.end_reason_name || '-' %></td>
+              <td>
+                <% if (item.status === 'accepted') { %>
+                  <form method="post" action="/mentee/mentorship/<%= item.id %>/end" class="inline-form wrap">
+                    <select name="end_reason_id" required>
+                      <option value="">Live - Ended reason</option>
+                      <% endReasons.forEach((reason) => { %>
+                        <option value="<%= reason.id %>"><%= reason.name %></option>
+                      <% }) %>
+                    </select>
+                    <button class="btn warning" type="submit">End</button>
+                  </form>
+                <% } else if (item.status === 'pending') { %>
+                  <div class="inline-form wrap">
+                    <form method="post" action="/mentee/mentorship/<%= item.id %>/resend">
+                      <button class="btn" type="submit">Resend Request</button>
+                    </form>
+                    <form method="post" action="/mentee/mentorship/<%= item.id %>/cancel" onsubmit="return confirm('Remove this pending mentor request?');">
+                      <button class="btn danger" type="submit">Remove Request</button>
+                    </form>
+                  </div>
+                <% } else { %>
+                  -
+                <% } %>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    <% } %>
+  </section>
+</main>
+<%- include("../partials/footer") %>

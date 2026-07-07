@@ -1,0 +1,22 @@
+<%- include("../partials/head", { title: "Choose Role" }) %>
+<%- include("../partials/header") %>
+<main class="container auth-wrap">
+  <section class="card">
+    <h1>Create Account</h1>
+    <p>First, tell us what you want to do in Manatee.</p>
+    <%- include("../partials/flash") %>
+    <form method="post" action="/register" class="form-grid">
+      <label>Role
+        <select name="role" required>
+          <option value="">Select one</option>
+          <option value="mentor">Mentor</option>
+          <option value="mentee">Mentee</option>
+          <option value="both">Both Mentor and Mentee</option>
+        </select>
+      </label>
+      <button type="submit" class="btn">Continue</button>
+    </form>
+    <a href="/login">Back to login</a>
+  </section>
+</main>
+<%- include("../partials/footer") %>

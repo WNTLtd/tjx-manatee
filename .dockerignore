@@ -1,0 +1,10 @@
+node_modules
+npm-debug.log
+.git
+.gitignore
+.env
+data
+uploads
+server.log
+.npm-cache
+query_script.js

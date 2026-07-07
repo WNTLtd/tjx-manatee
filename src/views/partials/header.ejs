@@ -1,0 +1,29 @@
+<header class="site-header">
+  <div class="brand-wrap">
+    <% if (theme?.logo_path) { %>
+      <img class="brand-logo" src="<%= theme.logo_path %>" alt="Company logo" />
+    <% } %>
+    <a class="brand" href="/">Manatee</a>
+    <span class="tag">Mentor / Mentee Network</span>
+  </div>
+  <nav>
+    <% if (currentUser) { %>
+      <a href="/profile">Account</a>
+      <% if (currentUser.role === "admin") { %>
+        <a href="/admin">Admin</a>
+      <% } %>
+      <% if (["mentor", "both"].includes(currentUser.role)) { %>
+        <a href="/mentor">Mentor Dashboard</a>
+      <% } %>
+      <% if (["mentee", "both"].includes(currentUser.role)) { %>
+        <a href="/mentee">Mentee Dashboard</a>
+      <% } %>
+      <form method="post" action="/logout" class="inline-form" autocomplete="off" data-lpignore="true" data-1p-ignore="true">
+        <button type="submit" class="btn ghost">Logout</button>
+      </form>
+    <% } else { %>
+      <a href="/login">Login</a>
+      <a href="/register">Sign Up</a>
+    <% } %>
+  </nav>
+</header>

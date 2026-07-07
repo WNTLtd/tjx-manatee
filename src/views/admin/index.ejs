@@ -1,0 +1,106 @@
+<%- include("../partials/head", { title: "Admin Dashboard" }) %>
+<%- include("../partials/header") %>
+<main class="container">
+  <div class="inline-form wrap page-head-row">
+    <h1>Admin Dashboard</h1>
+    <div class="inline-form wrap">
+      <a class="btn ghost" href="/manuals/admin-manual.html" target="_blank" rel="noopener noreferrer">Admin Manual</a>
+      <a class="btn ghost" href="/admin/users">Users</a>
+      <a class="btn ghost" href="/admin/theme">Theme Settings</a>
+      <a class="btn ghost" href="/admin/smtp">SMTP Settings</a>
+      <a class="btn ghost" href="/admin/audit">Audit Log</a>
+      <a class="btn ghost" href="/admin/history">Relationship History</a>
+    </div>
+  </div>
+  <%- include("../partials/flash") %>
+
+  <section class="grid-4 stats">
+    <a class="card stat stat-link" href="/admin/users?role=mentor"><h2><%= counts.mentors %></h2><p>Mentors</p></a>
+    <a class="card stat stat-link" href="/admin/users?role=mentee"><h2><%= counts.mentees %></h2><p>Mentees</p></a>
+    <a class="card stat stat-link" href="/admin/requests"><h2><%= counts.pending %></h2><p>Pending Requests</p></a>
+    <a class="card stat stat-link" href="/admin/relationships"><h2><%= counts.accepted %></h2><p>Live Mentorships</p></a>
+  </section>
+
+  <section class="stack-cards">
+    <article class="card">
+      <h2>Locations</h2>
+      <form method="post" action="/admin/locations" class="inline-form wrap" autocomplete="off">
+        <input name="name" placeholder="Add location" required />
+        <button class="btn" type="submit">Add</button>
+      </form>
+      <div class="list-box">
+        <ul class="item-list edit-list">
+          <% locations.forEach((item) => { %>
+            <li>
+              <label class="check-row item-check">
+                <input type="checkbox" name="ids" value="<%= item.id %>" form="bulk-delete-locations" />
+              </label>
+              <form method="post" action="/admin/locations/<%= item.id %>/update" class="item-edit-form" autocomplete="off">
+                <input name="name" value="<%= item.name %>" required />
+                <button class="btn save-on-edit" type="submit" disabled>Save</button>
+              </form>
+            </li>
+          <% }) %>
+        </ul>
+      </div>
+      <form id="bulk-delete-locations" method="post" action="/admin/locations/bulk-delete" onsubmit="return confirm('Delete selected location(s)?');" autocomplete="off">
+        <button class="btn danger" type="submit">Delete Selected</button>
+      </form>
+    </article>
+
+    <article class="card">
+      <h2>Functions</h2>
+      <form method="post" action="/admin/sections" class="inline-form wrap" autocomplete="off">
+        <input name="name" placeholder="Add function" required />
+        <button class="btn" type="submit">Add</button>
+      </form>
+      <div class="list-box">
+        <ul class="item-list edit-list">
+          <% sections.forEach((item) => { %>
+            <li>
+              <label class="check-row item-check">
+                <input type="checkbox" name="ids" value="<%= item.id %>" form="bulk-delete-functions" />
+              </label>
+              <form method="post" action="/admin/sections/<%= item.id %>/update" class="item-edit-form" autocomplete="off">
+                <input name="name" value="<%= item.name %>" required />
+                <button class="btn save-on-edit" type="submit" disabled>Save</button>
+              </form>
+            </li>
+          <% }) %>
+        </ul>
+      </div>
+      <form id="bulk-delete-functions" method="post" action="/admin/sections/bulk-delete" onsubmit="return confirm('Delete selected function(s)?');" autocomplete="off">
+        <button class="btn danger" type="submit">Delete Selected</button>
+      </form>
+    </article>
+
+    <article class="card">
+      <h2>Mentorship End Reasons</h2>
+      <form method="post" action="/admin/end-reasons" class="inline-form wrap" autocomplete="off">
+        <input name="name" placeholder="Add reason" required />
+        <button class="btn" type="submit">Add</button>
+      </form>
+      <div class="list-box">
+        <ul class="item-list edit-list">
+          <% endReasons.forEach((item) => { %>
+            <li>
+              <label class="check-row item-check">
+                <input type="checkbox" name="ids" value="<%= item.id %>" form="bulk-delete-end-reasons" />
+              </label>
+              <form method="post" action="/admin/end-reasons/<%= item.id %>/update" class="item-edit-form" autocomplete="off">
+                <input name="name" value="<%= item.name %>" required />
+                <button class="btn save-on-edit" type="submit" disabled>Save</button>
+              </form>
+            </li>
+          <% }) %>
+        </ul>
+      </div>
+      <form id="bulk-delete-end-reasons" method="post" action="/admin/end-reasons/bulk-delete" onsubmit="return confirm('Delete selected end reason(s)?');" autocomplete="off">
+        <button class="btn danger" type="submit">Delete Selected</button>
+      </form>
+    </article>
+  </section>
+
+</main>
+<script src="/js/admin-list-edit.js"></script>
+<%- include("../partials/footer") %>

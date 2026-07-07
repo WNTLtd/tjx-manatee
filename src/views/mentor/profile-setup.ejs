@@ -1,0 +1,82 @@
+<%- include("../partials/head", { title: "Mentor Profile" }) %>
+<%- include("../partials/header") %>
+<main class="container">
+  <div class="inline-form wrap page-head-row">
+    <h1>Mentor Profile Setup</h1>
+    <a class="btn ghost" href="/manuals/mentor-manual.html" target="_blank" rel="noopener noreferrer">Mentor Manual</a>
+  </div>
+  <%- include("../partials/flash") %>
+  <section class="card">
+    <form method="post" action="/mentor/profile" class="form-grid">
+      <label>Title
+        <select name="title">
+          <option value="" <%= !profile?.title ? 'selected' : '' %>>Select title</option>
+          <option value="Mr" <%= profile?.title === 'Mr' ? 'selected' : '' %>>Mr</option>
+          <option value="Mrs" <%= profile?.title === 'Mrs' ? 'selected' : '' %>>Mrs</option>
+          <option value="Ms" <%= profile?.title === 'Ms' ? 'selected' : '' %>>Ms</option>
+          <option value="Miss" <%= profile?.title === 'Miss' ? 'selected' : '' %>>Miss</option>
+          <option value="Mx" <%= profile?.title === 'Mx' ? 'selected' : '' %>>Mx</option>
+          <option value="Dr" <%= profile?.title === 'Dr' ? 'selected' : '' %>>Dr</option>
+          <option value="Prof" <%= profile?.title === 'Prof' ? 'selected' : '' %>>Prof</option>
+          <option value="Rev" <%= profile?.title === 'Rev' ? 'selected' : '' %>>Rev</option>
+        </select>
+      </label>
+
+      <label>Pronouns
+        <select name="pronouns" required>
+          <option value="" <%= !profile?.pronouns ? 'selected' : '' %>>Select pronouns</option>
+          <option value="she/her" <%= profile?.pronouns === 'she/her' ? 'selected' : '' %>>she/her</option>
+          <option value="he/him" <%= profile?.pronouns === 'he/him' ? 'selected' : '' %>>he/him</option>
+          <option value="they/them" <%= profile?.pronouns === 'they/them' ? 'selected' : '' %>>they/them</option>
+          <option value="she/they" <%= profile?.pronouns === 'she/they' ? 'selected' : '' %>>she/they</option>
+          <option value="he/they" <%= profile?.pronouns === 'he/they' ? 'selected' : '' %>>he/they</option>
+          <option value="ze/zir" <%= profile?.pronouns === 'ze/zir' ? 'selected' : '' %>>ze/zir</option>
+          <option value="prefer not to say" <%= profile?.pronouns === 'prefer not to say' ? 'selected' : '' %>>Prefer not to say</option>
+        </select>
+      </label>
+
+      <label>First name
+        <input name="first_name" value="<%= profile?.first_name || '' %>" required />
+      </label>
+
+      <label>Surname
+        <input name="surname" value="<%= profile?.surname || '' %>" required />
+      </label>
+
+      <label>Job title
+        <input name="job_title" value="<%= profile?.job_title || '' %>" />
+      </label>
+
+      <label>Location
+        <select name="location_id" required>
+          <option value="">Select location</option>
+          <% locations.forEach((location) => { %>
+            <option value="<%= location.id %>" <%= profile?.location_id === location.id ? 'selected' : '' %>><%= location.name %></option>
+          <% }) %>
+        </select>
+      </label>
+
+      <label>Availability
+        <select name="available">
+          <option value="1" <%= profile?.available ? 'selected' : '' %>>Yes - Available to mentor</option>
+          <option value="0" <%= profile && !profile.available ? 'selected' : '' %>>No - Not available</option>
+        </select>
+      </label>
+
+      <fieldset>
+        <legend>Functions (multiple)</legend>
+        <div class="choices">
+          <% sections.forEach((section) => { %>
+            <label class="check-row">
+              <input type="checkbox" name="section_ids" value="<%= section.id %>" <%= selectedSectionIds.includes(section.id) ? 'checked' : '' %> />
+              <%= section.name %>
+            </label>
+          <% }) %>
+        </div>
+      </fieldset>
+
+      <button class="btn" type="submit">Save Profile</button>
+    </form>
+  </section>
+</main>
+<%- include("../partials/footer") %>
