@@ -52,6 +52,12 @@
         <label>New Email
           <input type="text" name="email" value="<%= user.email %>" required />
         </label>
+        <label>Current Password
+          <div class="password-row">
+            <input id="email-current-password" type="password" name="currentPassword" required autocomplete="current-password" />
+            <button type="button" class="btn ghost toggle-password" data-target="email-current-password">Show</button>
+          </div>
+        </label>
         <button class="btn" type="submit">Update Email</button>
       </form>
     </article>

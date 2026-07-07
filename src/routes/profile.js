@@ -2,6 +2,8 @@ const express = require("express");
 const bcrypt = require("bcryptjs");
 const { db } = require("../db");
 const { requireAuth, setFlash } = require("../middleware/auth");
+const { generateResetToken } = require("../utils/password");
+const { sendSystemEmail } = require("../utils/mailer");
 const { buildTwoFactorOtpAuthUrl, buildTwoFactorQrDataUrl, generateTwoFactorSecret, verifyTwoFactorToken } = require("../utils/twoFactor");
 
 const router = express.Router();
@@ -53,10 +55,25 @@ router.post("/details", (req, res) => {
   return res.redirect("/profile");
 });
 
-router.post("/email", (req, res) => {
+router.post("/email", async (req, res) => {
   const email = String(req.body.email || "").trim();
+  const currentPassword = String(req.body.currentPassword || "");
   if (!email) {
     setFlash(req, "error", "Email is required.");
+    return res.redirect("/profile");
+  }
+
+  const currentUser = db
+    .prepare("SELECT id, email, password_hash FROM users WHERE id = ?")
+    .get(req.currentUser.id);
+
+  if (!currentUser || !bcrypt.compareSync(currentPassword, currentUser.password_hash)) {
+    setFlash(req, "error", "Current password is incorrect.");
+    return res.redirect("/profile");
+  }
+
+  if (currentUser.email === email) {
+    setFlash(req, "error", "New email is the same as your current email.");
     return res.redirect("/profile");
   }
 
@@ -66,8 +83,45 @@ router.post("/email", (req, res) => {
     return res.redirect("/profile");
   }
 
+  const token = generateResetToken();
+  const expiresAt = new Date(Date.now() + 72 * 60 * 60 * 1000).toISOString();
+
+  db.prepare("UPDATE email_change_recoveries SET used = 1 WHERE user_id = ? AND used = 0").run(req.currentUser.id);
   db.prepare("UPDATE users SET email = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(email, req.currentUser.id);
-  setFlash(req, "success", "Email updated.");
+  db.prepare(
+    `INSERT INTO email_change_recoveries (user_id, old_email, new_email, token, expires_at)
+     VALUES (?, ?, ?, ?, ?)`
+  ).run(req.currentUser.id, currentUser.email, email, token, expiresAt);
+
+  const base = process.env.BASE_URL || "http://localhost:3000";
+  const recoverLink = `${base}/recover-email-change/${token}`;
+  const expireText = "72 hours";
+
+  const [newEmailResult, oldEmailResult] = await Promise.allSettled([
+    sendSystemEmail({
+      to: email,
+      subject: "Your Manatee email address was changed",
+      html: `<p>Your account email has been updated to this address.</p><p>If you did not make this change, contact support immediately.</p>`,
+      text: "Your account email has been updated to this address. If you did not make this change, contact support immediately.",
+      eventType: "profile_email_changed_new_address_notice",
+      actorUserId: req.currentUser.id,
+    }),
+    sendSystemEmail({
+      to: currentUser.email,
+      subject: "Security alert: your Manatee email was changed",
+      html: `<p>Your Manatee login email was changed from this address to <strong>${email}</strong>.</p><p>If this was not you, use this recovery link within ${expireText}:</p><p><a href="${recoverLink}">${recoverLink}</a></p>`,
+      text: `Your Manatee login email was changed from this address to ${email}. If this was not you, use this recovery link within ${expireText}: ${recoverLink}`,
+      eventType: "profile_email_changed_old_address_alert",
+      actorUserId: req.currentUser.id,
+    }),
+  ]);
+
+  if (newEmailResult.status === "rejected" || oldEmailResult.status === "rejected") {
+    setFlash(req, "error", "Email updated, but one or more notification emails failed to send.");
+    return res.redirect("/profile");
+  }
+
+  setFlash(req, "success", "Email updated. Confirmation and recovery emails have been sent.");
   return res.redirect("/profile");
 });
 

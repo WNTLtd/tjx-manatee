@@ -284,6 +284,51 @@ router.post("/reset-password/:token", (req, res) => {
   return res.redirect("/login");
 });
 
+router.get("/recover-email-change/:token", (req, res) => {
+  const token = String(req.params.token || "");
+  const recovery = db
+    .prepare(
+      `SELECT ecr.id, ecr.user_id, ecr.old_email, ecr.new_email, u.email AS current_email
+       FROM email_change_recoveries ecr
+       JOIN users u ON u.id = ecr.user_id
+       WHERE ecr.token = ?
+         AND ecr.used = 0
+         AND datetime(ecr.expires_at) > datetime('now')`
+    )
+    .get(token);
+
+  if (!recovery) {
+    return res.status(400).render("error", {
+      title: "Invalid Recovery Link",
+      message: "This email recovery link is invalid or expired.",
+    });
+  }
+
+  try {
+    const updated = db.prepare("UPDATE users SET email = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND email = ?").run(
+      recovery.old_email,
+      recovery.user_id,
+      recovery.new_email
+    );
+
+    db.prepare("UPDATE email_change_recoveries SET used = 1 WHERE id = ?").run(recovery.id);
+
+    if (updated.changes === 0) {
+      setFlash(req, "error", "Recovery link is no longer valid for this account state.");
+      return res.redirect("/login");
+    }
+
+    setFlash(req, "success", "Email recovery complete. You can now sign in with the previous email address.");
+    return res.redirect("/login");
+  } catch (err) {
+    console.error("Failed to recover email change", err);
+    return res.status(500).render("error", {
+      title: "Recovery Failed",
+      message: "Unable to recover the email address right now. Please contact support.",
+    });
+  }
+});
+
 router.get("/change-password", requireAuth, (req, res) => {
   res.redirect("/profile");
 });
