@@ -180,6 +180,163 @@ button {
   white-space: nowrap;
 }
 
+.availability-toggle-form {
+  margin: 0;
+}
+
+.availability-toggle {
+  width: auto;
+  margin-top: 0;
+  padding: 0.35rem 0.55rem 0.35rem 0.5rem;
+  border: 1px solid var(--field-border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.availability-toggle__label,
+.availability-toggle__state {
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.availability-toggle__track {
+  width: 2.8rem;
+  height: 1.55rem;
+  border-radius: 999px;
+  background: var(--btn-disabled-bg);
+  padding: 0.17rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  transition: background 120ms ease;
+}
+
+.availability-toggle__thumb {
+  width: 1.05rem;
+  height: 1.05rem;
+  border-radius: 50%;
+  background: var(--paper);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  transition: transform 120ms ease;
+}
+
+.availability-toggle.is-on {
+  border-color: var(--flash-success-text);
+}
+
+.availability-toggle.is-on .availability-toggle__track {
+  background: var(--flash-success-text);
+  justify-content: flex-end;
+}
+
+.availability-toggle.is-on .availability-toggle__thumb {
+  transform: translateX(0);
+}
+
+.availability-toggle.is-off {
+  border-color: var(--field-border);
+}
+
+.availability-toggle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.goal-log {
+  max-height: 10rem;
+  overflow: auto;
+  white-space: pre-wrap;
+  background: var(--bg-soft);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0.5rem;
+  font-size: 0.85rem;
+  line-height: 1.35;
+}
+
+.goal-log-page {
+  max-height: 18rem;
+}
+
+.goal-log-entry {
+  padding: 0.1rem 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 65%, transparent);
+}
+
+.goal-log-entry:first-child {
+  padding-top: 0;
+}
+
+.goal-log-entry:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.goal-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.goal-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.05em;
+  height: 1.05em;
+  padding: 0 0.22em;
+  border-radius: 999px;
+  background: var(--goal-badge);
+  color: var(--paper);
+  font-size: 0.72em;
+  line-height: 1;
+  font-weight: 700;
+}
+
+.goal-link.has-unread-goals .goal-count {
+  animation: goal-badge-pulse 1.4s ease-in-out infinite;
+  box-shadow: 0 0 0 0 color-mix(in srgb, var(--goal-badge) 60%, transparent);
+}
+
+@keyframes goal-badge-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--goal-badge) 60%, transparent);
+  }
+
+  50% {
+    transform: scale(1.08);
+    box-shadow: 0 0 0 0.35rem color-mix(in srgb, var(--goal-badge) 30%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .goal-link.has-unread-goals .goal-count {
+    animation: none;
+  }
+}
+
+.muted-small {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.goal-form {
+  margin-top: 0.5rem;
+}
+
+.goal-form textarea {
+  resize: vertical;
+}
+
 input,
 select,
 textarea {
@@ -211,6 +368,42 @@ textarea {
 
 .btn.danger {
   background: var(--danger);
+}
+
+.btn.compact {
+  width: auto;
+  margin-top: 0;
+  padding: 0.32rem 0.55rem;
+  font-size: 0.82rem;
+  line-height: 1.1;
+}
+
+.btn.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+}
+
+.btn.icon-btn svg {
+  width: 1rem;
+  height: 1rem;
+  fill: currentColor;
+  display: block;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .btn:disabled {
@@ -378,6 +571,16 @@ td {
   flex-wrap: wrap;
   gap: 0.8rem;
   margin: 0.9rem 0;
+}
+
+.row-actions {
+  flex-wrap: nowrap;
+  gap: 0.25rem;
+  align-items: center;
+}
+
+.row-actions form {
+  margin: 0;
 }
 
 .hint {

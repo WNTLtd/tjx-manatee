@@ -1,0 +1,27 @@
+<%- include("../partials/head", { title: "Two-Factor Authentication" }) %>
+<%- include("../partials/header") %>
+<main class="container auth-wrap">
+  <section class="card">
+    <h1>Two-Factor Authentication</h1>
+    <%- include("../partials/flash") %>
+    <form method="post" action="/login/2fa" class="form-grid" autocomplete="one-time-code">
+      <label>Authenticator code
+        <input
+          name="token"
+          required
+          inputmode="numeric"
+          pattern="[0-9]{6}"
+          minlength="6"
+          maxlength="6"
+          placeholder="123456"
+          autocomplete="one-time-code"
+        />
+      </label>
+      <button type="submit" class="btn">Verify & Login</button>
+    </form>
+    <div class="row-links">
+      <a href="/login">Back to login</a>
+    </div>
+  </section>
+</main>
+<%- include("../partials/footer") %>

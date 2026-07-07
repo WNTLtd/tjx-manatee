@@ -2,8 +2,10 @@ const fs = require("fs");
 const path = require("path");
 const express = require("express");
 const multer = require("multer");
+const bcrypt = require("bcryptjs");
 const { db } = require("../db");
 const { requireRole, setFlash } = require("../middleware/auth");
+const { generateResetToken } = require("../utils/password");
 const { sendSystemEmail, testSmtpDelivery } = require("../utils/mailer");
 
 const router = express.Router();
@@ -32,6 +34,7 @@ const THEME_FIELDS = [
   "flash_error_bg_color",
   "flash_error_text_color",
   "danger_soft_color",
+  "goal_badge_color",
 ];
 
 const logoDir = path.join(__dirname, "..", "public", "uploads", "logos");
@@ -57,10 +60,137 @@ const uploadLogo = multer({
   },
 });
 
+const uploadCsv = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 2 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    const isCsvMime = file.mimetype === "text/csv" || file.mimetype === "application/vnd.ms-excel";
+    const isCsvName = String(file.originalname || "").toLowerCase().endsWith(".csv");
+    if (isCsvMime || isCsvName) return cb(null, true);
+    return cb(new Error("Only CSV files are allowed."));
+  },
+});
+
 function parseIdArray(value) {
   if (!value) return [];
   const raw = Array.isArray(value) ? value : [value];
   return raw.map((v) => Number(v)).filter((v) => Number.isInteger(v) && v > 0);
+}
+
+function parseFirstCsvColumn(line) {
+  const raw = String(line || "");
+  if (!raw.trim()) return "";
+
+  if (raw.trimStart().startsWith('"')) {
+    let inQuotes = false;
+    let value = "";
+
+    for (let i = 0; i < raw.length; i += 1) {
+      const ch = raw[i];
+      if (ch === '"') {
+        if (inQuotes && raw[i + 1] === '"') {
+          value += '"';
+          i += 1;
+        } else {
+          inQuotes = !inQuotes;
+        }
+        continue;
+      }
+
+      if (!inQuotes && ch === ",") break;
+      value += ch;
+    }
+
+    return value.trim();
+  }
+
+  const commaIndex = raw.indexOf(",");
+  if (commaIndex === -1) return raw.trim();
+  return raw.slice(0, commaIndex).trim();
+}
+
+function parseCsvNames(buffer) {
+  const text = String(buffer || "").replace(/^\uFEFF/, "");
+  const lines = text.split(/\r?\n/);
+
+  const names = [];
+  for (let i = 0; i < lines.length; i += 1) {
+    const value = parseFirstCsvColumn(lines[i]);
+    if (!value) continue;
+
+    // Optional header support.
+    if (i === 0 && value.toLowerCase() === "name") continue;
+    names.push(value);
+  }
+  return names;
+}
+
+function importNamedListCsv(req, res, options) {
+  const { tableName, label } = options;
+
+  if (!req.file || !req.file.buffer) {
+    setFlash(req, "error", `Please choose a CSV file for ${label}.`);
+    return res.redirect("/admin");
+  }
+
+  const parsed = parseCsvNames(req.file.buffer);
+  if (!parsed.length) {
+    setFlash(req, "error", `No valid ${label} values were found in the CSV.`);
+    return res.redirect("/admin");
+  }
+
+  const existingRows = db.prepare(`SELECT name FROM ${tableName}`).all();
+  const existing = new Set(existingRows.map((r) => String(r.name || "").trim().toLowerCase()));
+  const seenInFile = new Set();
+
+  const uniqueToInsert = [];
+  let duplicateInFile = 0;
+  let duplicateExisting = 0;
+
+  for (const name of parsed) {
+    const key = String(name || "").trim().toLowerCase();
+    if (!key) continue;
+
+    if (seenInFile.has(key)) {
+      duplicateInFile += 1;
+      continue;
+    }
+    seenInFile.add(key);
+
+    if (existing.has(key)) {
+      duplicateExisting += 1;
+      continue;
+    }
+
+    uniqueToInsert.push(String(name).trim());
+    existing.add(key);
+  }
+
+  if (!uniqueToInsert.length) {
+    setFlash(
+      req,
+      "error",
+      `No ${label} imported. ${duplicateExisting} already existed and ${duplicateInFile} duplicate row(s) were in the file.`
+    );
+    return res.redirect("/admin");
+  }
+
+  const insert = db.prepare(`INSERT INTO ${tableName} (name) VALUES (?)`);
+  const tx = db.transaction((items) => {
+    let inserted = 0;
+    for (const item of items) {
+      inserted += insert.run(item).changes;
+    }
+    return inserted;
+  });
+
+  const inserted = tx(uniqueToInsert);
+  setFlash(
+    req,
+    "success",
+    `${inserted} ${label} imported. Skipped ${duplicateExisting} existing and ${duplicateInFile} duplicate row(s).`
+  );
+  return res.redirect("/admin");
 }
 
 function getLocationUsageCount(id) {
@@ -415,6 +545,7 @@ router.get("/users", (req, res) => {
       `SELECT
          u.id,
          u.role,
+         u.is_superadmin,
          u.email,
         ${sqlDisplayName("u")} AS user_name,
          u.created_at,
@@ -453,6 +584,7 @@ router.get("/users", (req, res) => {
     title: "Users",
     users,
     roleFilter,
+    canManageAdmins: Boolean(req.currentUser.is_superadmin),
     sort: createSortState(sort, "/admin/users", {
       role: roleFilter,
     }),
@@ -638,6 +770,141 @@ router.post("/relationships/:id/remove", (req, res) => {
   return res.redirect("/admin/relationships");
 });
 
+router.post("/users/admin", async (req, res) => {
+  if (!req.currentUser.is_superadmin) {
+    setFlash(req, "error", "Only the superuser can create admin accounts.");
+    return res.redirect("/admin/users");
+  }
+
+  const email = String(req.body.email || "").trim();
+  const password = String(req.body.password || "");
+
+  if (!email || !password) {
+    setFlash(req, "error", "Admin email and password are required.");
+    return res.redirect("/admin/users");
+  }
+
+  if (password.length < 8) {
+    setFlash(req, "error", "Admin password must be at least 8 characters.");
+    return res.redirect("/admin/users");
+  }
+
+  const existing = db.prepare("SELECT id FROM users WHERE email = ?").get(email);
+  if (existing) {
+    setFlash(req, "error", "A user with that email already exists.");
+    return res.redirect("/admin/users");
+  }
+
+  const hash = bcrypt.hashSync(password, 10);
+  db.prepare("INSERT INTO users (role, is_superadmin, email, password_hash) VALUES ('admin', 0, ?, ?)").run(email, hash);
+
+  const base = process.env.BASE_URL || "http://localhost:3000";
+  const loginLink = `${base}/login`;
+  try {
+    await sendSystemEmail({
+      to: email,
+      subject: "Welcome to Manatee (Admin Access)",
+      html: `<p>Your admin account has been created.</p><p><strong>Email:</strong> ${email}</p><p><strong>Temporary password:</strong> ${password}</p><p>Please sign in and change your password immediately.</p><p><a href=\"${loginLink}\">Open Manatee Login</a></p>`,
+      text: `Your admin account has been created.\nEmail: ${email}\nTemporary password: ${password}\nPlease sign in and change your password immediately.\nLogin: ${loginLink}`,
+      eventType: "admin_user_created",
+      actorUserId: req.currentUser.id,
+    });
+  } catch (err) {
+    setFlash(req, "error", `Admin created, but welcome email failed: ${String(err?.message || err)}`);
+    return res.redirect("/admin/users");
+  }
+
+  setFlash(req, "success", `Admin user created: ${email}`);
+  return res.redirect("/admin/users");
+});
+
+router.post("/users/:id/resend-welcome", async (req, res) => {
+  const userId = Number(req.params.id);
+  if (!userId) {
+    setFlash(req, "error", "Invalid user.");
+    return res.redirect("/admin/users");
+  }
+
+  const user = db.prepare("SELECT id, email, role, is_superadmin FROM users WHERE id = ?").get(userId);
+  if (!user) {
+    setFlash(req, "error", "User not found.");
+    return res.redirect("/admin/users");
+  }
+
+  if (user.role === "admin" && !req.currentUser.is_superadmin) {
+    setFlash(req, "error", "Only the superuser can resend welcome emails to admin accounts.");
+    return res.redirect("/admin/users");
+  }
+
+  const base = process.env.BASE_URL || "http://localhost:3000";
+  const loginLink = `${base}/login`;
+  const displayRole = Number(user.is_superadmin) === 1 ? "superuser admin" : user.role;
+
+  try {
+    await sendSystemEmail({
+      to: user.email,
+      subject: "Welcome to Manatee",
+      html: `<p>Hello,</p><p>Your Manatee account is active.</p><p><strong>Role:</strong> ${displayRole}</p><p><a href=\"${loginLink}\">Open Manatee Login</a></p><p>If you do not know your password, use the forgot password link on the login page.</p>`,
+      text: `Your Manatee account is active.\nRole: ${displayRole}\nLogin: ${loginLink}\nIf you do not know your password, use the forgot password link on the login page.`,
+      eventType: "admin_resend_welcome_email",
+      actorUserId: req.currentUser.id,
+    });
+    setFlash(req, "success", `Welcome email resent to ${user.email}.`);
+  } catch (err) {
+    setFlash(req, "error", `Failed to resend welcome email: ${String(err?.message || err)}`);
+  }
+
+  return res.redirect("/admin/users");
+});
+
+router.post("/users/:id/reset-password", async (req, res) => {
+  const userId = Number(req.params.id);
+  if (!userId) {
+    setFlash(req, "error", "Invalid user.");
+    return res.redirect("/admin/users");
+  }
+
+  const user = db.prepare("SELECT id, email, role, is_superadmin FROM users WHERE id = ?").get(userId);
+  if (!user) {
+    setFlash(req, "error", "User not found.");
+    return res.redirect("/admin/users");
+  }
+
+  if (user.role === "admin" && !req.currentUser.is_superadmin) {
+    setFlash(req, "error", "Only the superuser can reset admin passwords.");
+    return res.redirect("/admin/users");
+  }
+
+  if (user.id === req.currentUser.id) {
+    setFlash(req, "error", "Use the normal forgot password flow to reset your own password.");
+    return res.redirect("/admin/users");
+  }
+
+  const token = generateResetToken();
+  const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+  db.prepare("INSERT INTO password_resets (user_id, token, expires_at) VALUES (?, ?, ?)").run(user.id, token, expiresAt);
+
+  const base = process.env.BASE_URL || "http://localhost:3000";
+  const resetLink = `${base}/reset-password/${token}`;
+  const displayRole = Number(user.is_superadmin) === 1 ? "superuser admin" : user.role;
+
+  try {
+    await sendSystemEmail({
+      to: user.email,
+      subject: "Manatee Password Reset",
+      html: `<p>Your password reset was requested by an admin.</p><p><strong>Role:</strong> ${displayRole}</p><p><a href=\"${resetLink}\">Reset your password</a></p><p>This link expires in 1 hour.</p>`,
+      text: `Your password reset was requested by an admin.\nRole: ${displayRole}\nReset your password here: ${resetLink}\nThis link expires in 1 hour.`,
+      eventType: "admin_reset_password_requested",
+      actorUserId: req.currentUser.id,
+    });
+    setFlash(req, "success", `Password reset email sent to ${user.email}.`);
+  } catch (err) {
+    setFlash(req, "error", `Reset link created, but email failed: ${String(err?.message || err)}`);
+  }
+
+  return res.redirect("/admin/users");
+});
+
 router.post("/users/:id/delete", (req, res) => {
   const userId = Number(req.params.id);
   if (!userId) {
@@ -650,14 +917,19 @@ router.post("/users/:id/delete", (req, res) => {
     return res.redirect("/admin/users");
   }
 
-  const user = db.prepare("SELECT id, email, role FROM users WHERE id = ?").get(userId);
+  const user = db.prepare("SELECT id, email, role, is_superadmin FROM users WHERE id = ?").get(userId);
   if (!user) {
     setFlash(req, "error", "User not found.");
     return res.redirect("/admin/users");
   }
 
-  if (user.role === "admin") {
-    setFlash(req, "error", "Admin users cannot be deleted here.");
+  if (Number(user.is_superadmin) === 1) {
+    setFlash(req, "error", "The superuser account cannot be deleted.");
+    return res.redirect("/admin/users");
+  }
+
+  if (user.role === "admin" && !req.currentUser.is_superadmin) {
+    setFlash(req, "error", "Only the superuser can delete admin accounts.");
     return res.redirect("/admin/users");
   }
 
@@ -740,6 +1012,19 @@ router.post("/locations", (req, res) => {
   db.prepare("INSERT OR IGNORE INTO locations (name) VALUES (?)").run(name);
   setFlash(req, "success", "Location saved.");
   return res.redirect("/admin");
+});
+
+router.post("/locations/import", (req, res) => {
+  uploadCsv.single("csv_file")(req, res, (err) => {
+    if (err) {
+      setFlash(req, "error", String(err.message || err));
+      return res.redirect("/admin");
+    }
+    return importNamedListCsv(req, res, {
+      tableName: "locations",
+      label: "location(s)",
+    });
+  });
 });
 
 router.post("/locations/:id/delete", (req, res) => {
@@ -830,6 +1115,19 @@ router.post("/sections", (req, res) => {
   return res.redirect("/admin");
 });
 
+router.post("/sections/import", (req, res) => {
+  uploadCsv.single("csv_file")(req, res, (err) => {
+    if (err) {
+      setFlash(req, "error", String(err.message || err));
+      return res.redirect("/admin");
+    }
+    return importNamedListCsv(req, res, {
+      tableName: "sections",
+      label: "function(s)",
+    });
+  });
+});
+
 router.post("/sections/:id/delete", (req, res) => {
   const id = Number(req.params.id);
   if (!id) {
@@ -916,6 +1214,19 @@ router.post("/end-reasons", (req, res) => {
   db.prepare("INSERT OR IGNORE INTO end_reasons (name) VALUES (?)").run(name);
   setFlash(req, "success", "End reason saved.");
   return res.redirect("/admin");
+});
+
+router.post("/end-reasons/import", (req, res) => {
+  uploadCsv.single("csv_file")(req, res, (err) => {
+    if (err) {
+      setFlash(req, "error", String(err.message || err));
+      return res.redirect("/admin");
+    }
+    return importNamedListCsv(req, res, {
+      tableName: "end_reasons",
+      label: "end reason(s)",
+    });
+  });
 });
 
 router.post("/end-reasons/:id/delete", (req, res) => {

@@ -2,6 +2,7 @@ const fs = require("fs");
 const path = require("path");
 const bcrypt = require("bcryptjs");
 const Database = require("better-sqlite3");
+const { parseMentorshipGoalLog } = require("./utils/mentorshipGoals");
 
 const dataDir = path.join(__dirname, "..", "data");
 const dbPath = path.join(dataDir, "manatee.db");
@@ -36,6 +37,7 @@ const THEME_DEFAULTS = {
   flash_error_bg_color: "#fdecee",
   flash_error_text_color: "#8f1d2f",
   danger_soft_color: "#f3c9cf",
+  goal_badge_color: "#0057ff",
 };
 
 function initializeDatabase() {
@@ -46,8 +48,11 @@ function initializeDatabase() {
     CREATE TABLE IF NOT EXISTS users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       role TEXT NOT NULL CHECK (role IN ('admin', 'mentor', 'mentee', 'both')),
+      is_superadmin INTEGER NOT NULL DEFAULT 0,
       email TEXT NOT NULL UNIQUE,
       password_hash TEXT NOT NULL,
+      twofa_enabled INTEGER NOT NULL DEFAULT 0,
+      twofa_secret TEXT,
       title TEXT,
       pronouns TEXT,
       first_name TEXT,
@@ -102,6 +107,9 @@ function initializeDatabase() {
       section_id INTEGER,
       status TEXT NOT NULL CHECK (status IN ('pending', 'accepted', 'declined', 'ended')),
       mentor_message TEXT,
+      goals_log TEXT,
+      mentor_goals_seen_count INTEGER NOT NULL DEFAULT 0,
+      mentee_goals_seen_count INTEGER NOT NULL DEFAULT 0,
       end_reason_id INTEGER,
       ended_by_user_id INTEGER,
       created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -149,12 +157,19 @@ function initializeDatabase() {
 
   // On a fresh database, create base tables first, then run additive column migrations.
   ensureUserNameColumns();
+  ensureUsersSuperAdminColumn();
+  ensureUsersTwoFactorColumns();
+  ensureMentorshipGoalsLogColumn();
+  ensureMentorshipGoalReadColumns();
 
   const adminExists = db.prepare("SELECT id FROM users WHERE role='admin' AND email='admin'").get();
   if (!adminExists) {
     const hash = bcrypt.hashSync("admin", 10);
-    db.prepare("INSERT INTO users (role, email, password_hash) VALUES ('admin', 'admin', ?)").run(hash);
+    db.prepare("INSERT INTO users (role, is_superadmin, email, password_hash) VALUES ('admin', 1, 'admin', ?)").run(hash);
   }
+
+  // Ensure the default seeded admin remains the superuser.
+  db.prepare("UPDATE users SET is_superadmin = 1 WHERE role='admin' AND email='admin'").run();
 
   const defaultLocations = ["Sydney", "Melbourne", "Perth"];
   const insertLocation = db.prepare("INSERT OR IGNORE INTO locations (name) VALUES (?)");
@@ -208,6 +223,7 @@ function ensureSiteSettingsTable() {
       flash_error_bg_color TEXT NOT NULL DEFAULT '#fdecee',
       flash_error_text_color TEXT NOT NULL DEFAULT '#8f1d2f',
       danger_soft_color TEXT NOT NULL DEFAULT '#f3c9cf',
+      goal_badge_color TEXT NOT NULL DEFAULT '#0057ff',
       logo_path TEXT
     );
   `);
@@ -235,14 +251,16 @@ function ensureSiteSettingsTable() {
         header_start_color, header_end_color, field_border_color, surface_color,
         btn_text_color, btn_disabled_bg_color, btn_disabled_text_color,
         flash_success_bg_color, flash_success_text_color,
-        flash_error_bg_color, flash_error_text_color, danger_soft_color
+        flash_error_bg_color, flash_error_text_color, danger_soft_color,
+        goal_badge_color
       ) VALUES (
         1, @bg_color, @paper_color, @ink_color, @accent_color, @accent_2_color,
         @danger_color, @warning_color, @muted_color, @line_color, @bg_soft_color,
         @header_start_color, @header_end_color, @field_border_color, @surface_color,
         @btn_text_color, @btn_disabled_bg_color, @btn_disabled_text_color,
         @flash_success_bg_color, @flash_success_text_color,
-        @flash_error_bg_color, @flash_error_text_color, @danger_soft_color
+        @flash_error_bg_color, @flash_error_text_color, @danger_soft_color,
+        @goal_badge_color
       )`
     ).run(THEME_DEFAULTS);
   }
@@ -268,8 +286,11 @@ function migrateUsersRoleConstraintForBoth() {
     CREATE TABLE users_new (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       role TEXT NOT NULL CHECK (role IN ('admin', 'mentor', 'mentee', 'both')),
+      is_superadmin INTEGER NOT NULL DEFAULT 0,
       email TEXT NOT NULL UNIQUE,
       password_hash TEXT NOT NULL,
+      twofa_enabled INTEGER NOT NULL DEFAULT 0,
+      twofa_secret TEXT,
       title TEXT,
       pronouns TEXT,
       first_name TEXT,
@@ -278,8 +299,8 @@ function migrateUsersRoleConstraintForBoth() {
       created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
       updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     );
-    INSERT INTO users_new (id, role, email, password_hash, title, pronouns, first_name, surname, job_title, created_at, updated_at)
-    SELECT id, role, email, password_hash, NULL, NULL, NULL, NULL, NULL, created_at, updated_at
+    INSERT INTO users_new (id, role, is_superadmin, email, password_hash, twofa_enabled, twofa_secret, title, pronouns, first_name, surname, job_title, created_at, updated_at)
+    SELECT id, role, 0, email, password_hash, 0, NULL, NULL, NULL, NULL, NULL, NULL, created_at, updated_at
     FROM users;
     DROP TABLE users;
     ALTER TABLE users_new RENAME TO users;
@@ -306,6 +327,76 @@ function ensureUserNameColumns() {
   }
   if (!names.includes("job_title")) {
     db.prepare("ALTER TABLE users ADD COLUMN job_title TEXT").run();
+  }
+}
+
+function ensureUsersSuperAdminColumn() {
+  const columns = db.prepare("PRAGMA table_info(users)").all();
+  const names = columns.map((col) => col.name);
+
+  if (!names.includes("is_superadmin")) {
+    db.prepare("ALTER TABLE users ADD COLUMN is_superadmin INTEGER NOT NULL DEFAULT 0").run();
+  }
+
+  const superCount = Number(db.prepare("SELECT COUNT(*) AS c FROM users WHERE role='admin' AND is_superadmin = 1").get().c);
+  if (superCount > 0) return;
+
+  const defaultAdmin = db.prepare("SELECT id FROM users WHERE role='admin' AND email='admin' ORDER BY id ASC LIMIT 1").get();
+  if (defaultAdmin) {
+    db.prepare("UPDATE users SET is_superadmin = 1 WHERE id = ?").run(defaultAdmin.id);
+    return;
+  }
+
+  const firstAdmin = db.prepare("SELECT id FROM users WHERE role='admin' ORDER BY id ASC LIMIT 1").get();
+  if (firstAdmin) {
+    db.prepare("UPDATE users SET is_superadmin = 1 WHERE id = ?").run(firstAdmin.id);
+  }
+}
+
+function ensureUsersTwoFactorColumns() {
+  const columns = db.prepare("PRAGMA table_info(users)").all();
+  const names = columns.map((col) => col.name);
+
+  if (!names.includes("twofa_enabled")) {
+    db.prepare("ALTER TABLE users ADD COLUMN twofa_enabled INTEGER NOT NULL DEFAULT 0").run();
+  }
+
+  if (!names.includes("twofa_secret")) {
+    db.prepare("ALTER TABLE users ADD COLUMN twofa_secret TEXT").run();
+  }
+}
+
+function ensureMentorshipGoalsLogColumn() {
+  const columns = db.prepare("PRAGMA table_info(mentorships)").all();
+  const names = columns.map((col) => col.name);
+
+  if (!names.includes("goals_log")) {
+    db.prepare("ALTER TABLE mentorships ADD COLUMN goals_log TEXT").run();
+  }
+}
+
+function ensureMentorshipGoalReadColumns() {
+  const columns = db.prepare("PRAGMA table_info(mentorships)").all();
+  const names = columns.map((col) => col.name);
+
+  if (!names.includes("mentor_goals_seen_count")) {
+    db.prepare("ALTER TABLE mentorships ADD COLUMN mentor_goals_seen_count INTEGER NOT NULL DEFAULT 0").run();
+  }
+
+  if (!names.includes("mentee_goals_seen_count")) {
+    db.prepare("ALTER TABLE mentorships ADD COLUMN mentee_goals_seen_count INTEGER NOT NULL DEFAULT 0").run();
+  }
+
+  const mentorships = db.prepare("SELECT id, goals_log FROM mentorships").all();
+  const update = db.prepare(
+    `UPDATE mentorships
+     SET mentor_goals_seen_count = ?, mentee_goals_seen_count = ?
+     WHERE id = ?`
+  );
+
+  for (const mentorship of mentorships) {
+    const totalEntries = parseMentorshipGoalLog(mentorship.goals_log).length;
+    update.run(totalEntries, totalEntries, mentorship.id);
   }
 }
 
@@ -375,6 +466,9 @@ function repairBrokenUserForeignKeys() {
       section_id INTEGER,
       status TEXT NOT NULL CHECK (status IN ('pending', 'accepted', 'declined', 'ended')),
       mentor_message TEXT,
+      goals_log TEXT,
+      mentor_goals_seen_count INTEGER NOT NULL DEFAULT 0,
+      mentee_goals_seen_count INTEGER NOT NULL DEFAULT 0,
       end_reason_id INTEGER,
       ended_by_user_id INTEGER,
       created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -386,11 +480,13 @@ function repairBrokenUserForeignKeys() {
       FOREIGN KEY (ended_by_user_id) REFERENCES users(id)
     );
     INSERT INTO mentorships (
-      id, mentor_id, mentee_id, section_id, status, mentor_message,
+      id, mentor_id, mentee_id, section_id, status, mentor_message, goals_log,
+      mentor_goals_seen_count, mentee_goals_seen_count,
       end_reason_id, ended_by_user_id, created_at, updated_at
     )
     SELECT
-      id, mentor_id, mentee_id, section_id, status, mentor_message,
+      id, mentor_id, mentee_id, section_id, status, mentor_message, goals_log,
+      0, 0,
       end_reason_id, ended_by_user_id, created_at, updated_at
     FROM mentorships_old;
     DROP TABLE mentorships_old;

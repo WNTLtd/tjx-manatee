@@ -8,20 +8,8 @@
   <%- include("../partials/flash") %>
 
   <section class="card">
-    <h2>Your Profile</h2>
+    <h2>Location of Mentor</h2>
     <form method="post" action="/mentee/profile" class="inline-form wrap">
-      <label>Title
-        <input name="title" value="<%= profile?.title || '' %>" placeholder="Ms, Mr, Dr..." />
-      </label>
-      <label>First name
-        <input name="first_name" value="<%= profile?.first_name || '' %>" required />
-      </label>
-      <label>Surname
-        <input name="surname" value="<%= profile?.surname || '' %>" required />
-      </label>
-      <label>Job title
-        <input name="job_title" value="<%= profile?.job_title || '' %>" />
-      </label>
       <label>Location
         <select name="location_id" required>
           <option value="">Select location</option>
@@ -94,6 +82,13 @@
               <td><%= item.status %></td>
               <td><%= item.end_reason_name || '-' %></td>
               <td>
+                <div class="inline-form wrap">
+                  <a class="btn ghost compact goal-link <%= item.goalUnreadCount > 0 ? 'has-unread-goals' : '' %>" href="/mentee/mentorship/<%= item.id %>/goals" aria-label="Open goals <%= item.goalUnreadCount > 0 ? `(${item.goalUnreadCount} unread)` : '' %>">
+                    Goals
+                    <% if (item.goalUnreadCount > 0) { %>
+                      <sup class="goal-count"><%= item.goalUnreadCount %></sup>
+                    <% } %>
+                  </a>
                 <% if (item.status === 'accepted') { %>
                   <form method="post" action="/mentee/mentorship/<%= item.id %>/end" class="inline-form wrap">
                     <select name="end_reason_id" required>
@@ -114,8 +109,9 @@
                     </form>
                   </div>
                 <% } else { %>
-                  -
+                  <span>-</span>
                 <% } %>
+                </div>
               </td>
             </tr>
           <% }) %>

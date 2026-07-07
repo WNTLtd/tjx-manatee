@@ -8,7 +8,10 @@
   </div>
   <nav>
     <% if (currentUser) { %>
-      <a href="/profile">Account</a>
+      <a href="/profile">Profile</a>
+      <% if (["mentor", "both"].includes(currentUser.role) || ["mentee", "both"].includes(currentUser.role)) { %>
+        <span aria-hidden="true">|</span>
+      <% } %>
       <% if (currentUser.role === "admin") { %>
         <a href="/admin">Admin</a>
       <% } %>

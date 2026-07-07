@@ -10,14 +10,15 @@
     <main class="container">
       <section class="card">
         <h1>Manatee Admin User Manual</h1>
-        <p>This guide covers all Admin workflows in Manatee: setup, user management, matching oversight, email configuration, and audit/history.</p>
+        <p>This guide covers all Admin workflows in Manatee: dashboard management, user administration, matching oversight, list maintenance, SMTP/theme configuration, and reporting.</p>
       </section>
 
       <section class="card">
         <h2>1. Login and Access</h2>
         <p>1. Go to the login page.</p>
         <p>2. Sign in with your Admin account.</p>
-        <p>3. You will land on the Admin Dashboard.</p>
+        <p>3. If your account has 2FA enabled, enter your authenticator app code to complete login.</p>
+        <p>4. You will land on the Admin Dashboard.</p>
         <p>Default first-run credentials are admin/admin unless changed.</p>
       </section>
 
@@ -37,11 +38,24 @@
         <p>1. Locations.</p>
         <p>2. Functions.</p>
         <p>3. Mentorship End Reasons.</p>
-        <p>Each list supports add and delete actions. Changes are reflected immediately for users.</p>
+        <p>Each list supports add, inline edit, and bulk delete (when records are not in use).</p>
+        <p>Each list also supports CSV import with sanity checks:</p>
+        <p>1. Blank rows are ignored.</p>
+        <p>2. Duplicate rows inside the file are skipped.</p>
+        <p>3. Existing database duplicates are skipped.</p>
+        <p>Changes are reflected immediately for users.</p>
       </section>
 
       <section class="card">
-        <h2>4. SMTP and Email Settings</h2>
+        <h2>4. Theme and Branding</h2>
+        <p>Use Theme Settings to control:</p>
+        <p>1. Site color palette.</p>
+        <p>2. Unread goal badge highlight color.</p>
+        <p>3. Company logo upload.</p>
+      </section>
+
+      <section class="card">
+        <h2>5. SMTP and Email Settings</h2>
         <p>Configure the system email sender in SMTP and Email Logging:</p>
         <p>1. SMTP host, port, secure mode.</p>
         <p>2. SMTP user and password.</p>
@@ -51,47 +65,53 @@
       </section>
 
       <section class="card">
-        <h2>5. Users Page</h2>
+        <h2>6. Users Page</h2>
         <p>Open Users to view all registered users.</p>
-        <p>For each user you can see role, active relationship counts, and creation time.</p>
-        <p>Admins can delete non-admin users. Deletion removes linked data through relational cleanup rules.</p>
+        <p>For each user you can see role, active relationship counts, and timestamps.</p>
+        <p>From Users you can:</p>
+        <p>1. Create admin users (superuser only).</p>
+        <p>2. Resend welcome emails.</p>
+        <p>3. Send password reset emails.</p>
+        <p>4. Delete users (with role/superuser protections).</p>
       </section>
 
       <section class="card">
-        <h2>6. Pending Requests</h2>
+        <h2>7. Pending Requests</h2>
         <p>Open Pending Requests to view all mentorship requests waiting for mentor action.</p>
         <p>Admin can resend a request reminder to the mentor on behalf of the mentee.</p>
       </section>
 
       <section class="card">
-        <h2>7. Live Relationships</h2>
+        <h2>8. Live Relationships</h2>
         <p>Open Live Relationships to view all accepted mentorship pairs currently active.</p>
+        <p>Admin can remove a live relationship, which archives it as ended with an admin reset reason.</p>
       </section>
 
       <section class="card">
-        <h2>8. Reset Mentor Relationships</h2>
+        <h2>9. Reset Mentor Relationships</h2>
         <p>Use Reset Mentor Relationships to archive non-ended records for one selected mentor.</p>
         <p>This does not erase ended history; it marks active/pending records as ended with an Admin reset reason.</p>
       </section>
 
       <section class="card">
-        <h2>9. Relationship History and Export</h2>
+        <h2>10. Relationship History and Export</h2>
         <p>Relationship History shows historical mentorship lifecycle records.</p>
         <p>Use Export CSV to download history for reporting or compliance.</p>
       </section>
 
       <section class="card">
-        <h2>10. Audit Log</h2>
+        <h2>11. Audit Log</h2>
         <p>Audit Log shows email/audit events such as sends, failures, SMTP test outcomes, and workflow notifications.</p>
         <p>Use filters for event type, status, recipient, and date range.</p>
       </section>
 
       <section class="card">
-        <h2>11. Admin Best Practices</h2>
+        <h2>12. Admin Best Practices</h2>
         <p>1. Keep From Email aligned with SMTP authenticated sender unless your mail platform supports verified aliases.</p>
         <p>2. Use SMTP test before going live.</p>
         <p>3. Review audit logs frequently for failed emails.</p>
         <p>4. Export relationship history regularly if required by policy.</p>
+        <p>5. Use superuser-only controls carefully for admin account management.</p>
       </section>
     </main>
   </body>

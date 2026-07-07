@@ -4,6 +4,7 @@ const { db } = require("../db");
 const { setFlash, requireAuth } = require("../middleware/auth");
 const { generateResetToken } = require("../utils/password");
 const { sendSystemEmail } = require("../utils/mailer");
+const { verifyTwoFactorToken } = require("../utils/twoFactor");
 
 const router = express.Router();
 
@@ -11,6 +12,7 @@ const REGISTRATION_ROLES = ["mentor", "mentee", "both"];
 
 router.get("/login", (req, res) => {
   if (req.currentUser) return res.redirect("/");
+  if (req.session.pendingTwoFactorUserId) return res.redirect("/login/2fa");
   return res.render("auth/login", { title: "Login" });
 });
 
@@ -23,7 +25,24 @@ router.post("/login", (req, res) => {
     return res.redirect("/login");
   }
 
+  if (Number(user.twofa_enabled) === 1 && user.twofa_secret) {
+    req.session.pendingTwoFactorUserId = user.id;
+    return req.session.save((err) => {
+      if (err) {
+        console.error("Session save failed on 2FA login step", err);
+        return res.status(500).render("error", {
+          title: "Login Error",
+          message: "Unable to continue login right now. Please try again.",
+        });
+      }
+
+      setFlash(req, "success", "Enter your authenticator code to finish login.");
+      return res.redirect("/login/2fa");
+    });
+  }
+
   req.session.userId = user.id;
+  delete req.session.pendingTwoFactorUserId;
   return req.session.save((err) => {
     if (err) {
       console.error("Session save failed on login", err);
@@ -38,7 +57,61 @@ router.post("/login", (req, res) => {
   });
 });
 
+router.get("/login/2fa", (req, res) => {
+  if (req.currentUser) return res.redirect("/");
+
+  const pendingUserId = Number(req.session.pendingTwoFactorUserId || 0);
+  if (!pendingUserId) {
+    setFlash(req, "error", "Please log in first.");
+    return res.redirect("/login");
+  }
+
+  return res.render("auth/login-2fa", { title: "Two-Factor Authentication" });
+});
+
+router.post("/login/2fa", (req, res) => {
+  if (req.currentUser) return res.redirect("/");
+
+  const pendingUserId = Number(req.session.pendingTwoFactorUserId || 0);
+  if (!pendingUserId) {
+    setFlash(req, "error", "Please log in first.");
+    return res.redirect("/login");
+  }
+
+  const user = db
+    .prepare("SELECT id, twofa_enabled, twofa_secret FROM users WHERE id = ?")
+    .get(pendingUserId);
+
+  if (!user || Number(user.twofa_enabled) !== 1 || !user.twofa_secret) {
+    delete req.session.pendingTwoFactorUserId;
+    setFlash(req, "error", "Two-factor login is no longer available for this account.");
+    return res.redirect("/login");
+  }
+
+  const token = String(req.body.token || "");
+  if (!verifyTwoFactorToken(user.twofa_secret, token)) {
+    setFlash(req, "error", "Invalid authenticator code.");
+    return res.redirect("/login/2fa");
+  }
+
+  req.session.userId = user.id;
+  delete req.session.pendingTwoFactorUserId;
+  return req.session.save((err) => {
+    if (err) {
+      console.error("Session save failed on 2FA verification", err);
+      return res.status(500).render("error", {
+        title: "Login Error",
+        message: "Unable to complete login right now. Please try again.",
+      });
+    }
+
+    setFlash(req, "success", "Welcome back.");
+    return res.redirect("/");
+  });
+});
+
 router.post("/logout", (req, res) => {
+  delete req.session.pendingTwoFactorUserId;
   req.session.destroy(() => {
     res.redirect("/login");
   });

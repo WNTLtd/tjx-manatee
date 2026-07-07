@@ -23,7 +23,7 @@
       </label>
 
       <label>Pronouns
-        <select name="pronouns" required>
+        <select name="pronouns">
           <option value="" <%= !profile?.pronouns ? 'selected' : '' %>>Select pronouns</option>
           <option value="she/her" <%= profile?.pronouns === 'she/her' ? 'selected' : '' %>>she/her</option>
           <option value="he/him" <%= profile?.pronouns === 'he/him' ? 'selected' : '' %>>he/him</option>

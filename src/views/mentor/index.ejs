@@ -3,45 +3,25 @@
 <main class="container">
   <div class="inline-form wrap page-head-row">
     <h1>Mentor Dashboard</h1>
-    <a class="btn ghost" href="/manuals/mentor-manual.html" target="_blank" rel="noopener noreferrer">Mentor Manual</a>
+    <div class="inline-form wrap">
+      <form method="post" action="/mentor/profile" class="inline-form availability-toggle-form">
+        <input type="hidden" name="quick_available" value="<%= profile?.available ? '0' : '1' %>" />
+        <button class="availability-toggle <%= profile?.available ? 'is-on' : 'is-off' %>" type="submit" aria-label="Toggle availability" title="Toggle availability">
+          <span class="availability-toggle__label">Available to Mentor</span>
+          <span class="availability-toggle__track" aria-hidden="true">
+            <span class="availability-toggle__thumb"></span>
+          </span>
+          <span class="availability-toggle__state"><%= profile?.available ? 'On' : 'Off' %></span>
+        </button>
+      </form>
+      <a class="btn ghost" href="/manuals/mentor-manual.html" target="_blank" rel="noopener noreferrer">Mentor Manual</a>
+    </div>
   </div>
   <%- include("../partials/flash") %>
 
   <section class="card">
-    <h2>Profile and Availability</h2>
+    <h2>Functions you can Mentor</h2>
     <form method="post" action="/mentor/profile" class="form-grid">
-      <label>Title
-        <input name="title" value="<%= profile?.title || '' %>" placeholder="Ms, Mr, Dr..." />
-      </label>
-
-      <label>First name
-        <input name="first_name" value="<%= profile?.first_name || '' %>" required />
-      </label>
-
-      <label>Surname
-        <input name="surname" value="<%= profile?.surname || '' %>" required />
-      </label>
-
-      <label>Job title
-        <input name="job_title" value="<%= profile?.job_title || '' %>" />
-      </label>
-
-      <label>Location
-        <select name="location_id" required>
-          <option value="">Select location</option>
-          <% locations.forEach((location) => { %>
-            <option value="<%= location.id %>" <%= profile?.location_id === location.id ? 'selected' : '' %>><%= location.name %></option>
-          <% }) %>
-        </select>
-      </label>
-
-      <label>Availability
-        <select name="available">
-          <option value="1" <%= profile?.available ? 'selected' : '' %>>Yes - Available</option>
-          <option value="0" <%= profile && !profile.available ? 'selected' : '' %>>No - Unavailable</option>
-        </select>
-      </label>
-
       <fieldset>
         <legend>Functions</legend>
         <div class="choices">
@@ -53,6 +33,16 @@
           <% }) %>
         </div>
       </fieldset>
+
+      <label>Your Location
+        <select name="location_id" required>
+          <option value="">Select location</option>
+          <% locations.forEach((location) => { %>
+            <option value="<%= location.id %>" <%= profile?.location_id === location.id ? 'selected' : '' %>><%= location.name %></option>
+          <% }) %>
+        </select>
+      </label>
+
       <button class="btn" type="submit">Update Profile</button>
     </form>
   </section>
@@ -69,18 +59,26 @@
             <strong><%= item.mentee_email %></strong>
             <p>Function: <%= item.section_name || 'N/A' %></p>
           </div>
-          <form method="post" action="/mentor/mentorship/<%= item.id %>/respond" class="form-grid compact">
-            <label>Action
-              <select name="action">
-                <option value="accepted">Accept</option>
-                <option value="declined">Decline</option>
-              </select>
-            </label>
-            <label>Personal message
-              <textarea name="mentor_message" rows="2" placeholder="Optional personal message"></textarea>
-            </label>
-            <button class="btn" type="submit">Submit Response</button>
-          </form>
+          <div class="form-grid compact">
+            <form method="post" action="/mentor/mentorship/<%= item.id %>/respond" class="form-grid compact">
+              <label>Action
+                <select name="action">
+                  <option value="accepted">Accept</option>
+                  <option value="declined">Decline</option>
+                </select>
+              </label>
+              <label>Personal message
+                <textarea name="mentor_message" rows="2" placeholder="Optional personal message"></textarea>
+              </label>
+              <button class="btn" type="submit">Submit Response</button>
+            </form>
+            <a class="btn ghost compact goal-link <%= item.goalUnreadCount > 0 ? 'has-unread-goals' : '' %>" href="/mentor/mentorship/<%= item.id %>/goals" aria-label="Open goals <%= item.goalUnreadCount > 0 ? `(${item.goalUnreadCount} unread)` : '' %>">
+              Goals
+              <% if (item.goalUnreadCount > 0) { %>
+                <sup class="goal-count"><%= item.goalUnreadCount %></sup>
+              <% } %>
+            </a>
+          </div>
         </article>
       <% }) %>
     <% } %>
@@ -106,6 +104,13 @@
               <td><%= item.status %></td>
               <td><%= item.end_reason_name || '-' %></td>
               <td>
+                <div class="inline-form wrap">
+                  <a class="btn ghost compact goal-link <%= item.goalUnreadCount > 0 ? 'has-unread-goals' : '' %>" href="/mentor/mentorship/<%= item.id %>/goals" aria-label="Open goals <%= item.goalUnreadCount > 0 ? `(${item.goalUnreadCount} unread)` : '' %>">
+                    Goals
+                    <% if (item.goalUnreadCount > 0) { %>
+                      <sup class="goal-count"><%= item.goalUnreadCount %></sup>
+                    <% } %>
+                  </a>
                 <% if (item.status === 'accepted') { %>
                   <form method="post" action="/mentor/mentorship/<%= item.id %>/end" class="inline-form wrap">
                     <select name="end_reason_id" required>
@@ -117,8 +122,9 @@
                     <button class="btn warning" type="submit">End</button>
                   </form>
                 <% } else { %>
-                  -
+                  <span>-</span>
                 <% } %>
+                </div>
               </td>
             </tr>
           <% }) %>

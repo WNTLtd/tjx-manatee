@@ -1,0 +1,66 @@
+<%- include("partials/head", { title }) %>
+<%- include("partials/header") %>
+<main class="container">
+  <div class="inline-form wrap page-head-row">
+    <div>
+      <h1><%= pageHeading %></h1>
+      <% if (pageSubheading) { %>
+        <p class="hint"><%= pageSubheading %></p>
+      <% } %>
+    </div>
+    <a class="btn ghost" href="<%= backHref %>">Back to <%= backLabel %></a>
+  </div>
+
+  <%- include("partials/flash") %>
+
+  <section class="card stack-cards">
+    <div class="grid-2">
+      <article class="card">
+        <h2>Mentor</h2>
+        <p><strong><%= mentorship.mentor_email %></strong></p>
+      </article>
+      <article class="card">
+        <h2>Mentee</h2>
+        <p><strong><%= mentorship.mentee_email %></strong></p>
+      </article>
+    </div>
+
+    <div class="grid-2">
+      <article class="card">
+        <h2>Details</h2>
+        <p><strong>Function:</strong> <%= mentorship.section_name || 'N/A' %></p>
+        <p><strong>Status:</strong> <%= mentorship.status %></p>
+        <p><strong>End reason:</strong> <%= mentorship.end_reason_name || '-' %></p>
+      </article>
+      <article class="card">
+        <h2>Next step record</h2>
+        <% if (goalEntries && goalEntries.length > 0) { %>
+          <div class="goal-log goal-log-page">
+            <% goalEntries.forEach((entry) => { %>
+              <div class="goal-log-entry"><%= entry %></div>
+            <% }) %>
+          </div>
+        <% } else { %>
+          <p class="muted-small">No goals recorded yet.</p>
+        <% } %>
+      </article>
+    </div>
+
+    <% if (canAppend) { %>
+      <article class="card">
+        <h2>Add a new entry</h2>
+        <form method="post" action="<%= submitAction %>" class="form-grid">
+          <label>New <%= entryLabel.toLowerCase() %> note
+            <textarea name="goal_entry" rows="4" placeholder="Add a goal, next step, or reminder from the <%= entryLabel.toLowerCase() %> side"></textarea>
+          </label>
+          <button class="btn" type="submit">Add Entry</button>
+        </form>
+      </article>
+    <% } else { %>
+      <article class="card">
+        <p class="muted-small">This mentorship is no longer editable, so the record is read-only.</p>
+      </article>
+    <% } %>
+  </section>
+</main>
+<%- include("partials/footer") %>

@@ -2,6 +2,8 @@ const express = require("express");
 const { db } = require("../db");
 const { requireRole, setFlash } = require("../middleware/auth");
 const { sendSystemEmail } = require("../utils/mailer");
+const { escapeHtml } = require("../utils/html");
+const { buildMentorshipGoalEntry, appendMentorshipGoalLog, getMentorshipUnreadGoalCount, parseMentorshipGoalLog } = require("../utils/mentorshipGoals");
 
 const router = express.Router();
 router.use(requireRole("mentee"));
@@ -41,10 +43,6 @@ router.post("/profile", (req, res) => {
   const locationId = req.body.location_id ? Number(req.body.location_id) : null;
   const title = String(req.body.title || "").trim() || null;
   const pronouns = String(req.body.pronouns || "").trim() || null;
-  if (!pronouns) {
-    setFlash(req, "error", "Please select your pronouns.");
-    return res.redirect("/mentee/profile-setup");
-  }
   const firstName = String(req.body.first_name || "").trim() || null;
   const surname = String(req.body.surname || "").trim() || null;
   const jobTitle = String(req.body.job_title || "").trim() || null;
@@ -128,15 +126,70 @@ router.get("/", (req, res) => {
     )
     .all(req.currentUser.id);
 
+  const mentorshipsWithGoalCounts = mentorships.map((mentorship) => ({
+    ...mentorship,
+    goalUnreadCount: getMentorshipUnreadGoalCount(mentorship, req.currentUser.id),
+  }));
+
   res.render("mentee/index", {
     title: "Mentee Dashboard",
     profile,
     locations,
     sections,
-    mentorships,
+    mentorships: mentorshipsWithGoalCounts,
     availableMentors,
     selectedSectionId,
     endReasons,
+  });
+});
+
+router.get("/mentorship/:id/goals", (req, res) => {
+  const mentorshipId = Number(req.params.id);
+  if (!mentorshipId) {
+    setFlash(req, "error", "Invalid mentorship.");
+    return res.redirect("/mentee");
+  }
+
+  const mentorship = db
+    .prepare(
+      `SELECT
+         m.*,
+         mentor.email AS mentor_email,
+         mentee.email AS mentee_email,
+         s.name AS section_name,
+         er.name AS end_reason_name
+       FROM mentorships m
+       JOIN users mentor ON mentor.id = m.mentor_id
+       JOIN users mentee ON mentee.id = m.mentee_id
+       LEFT JOIN sections s ON s.id = m.section_id
+       LEFT JOIN end_reasons er ON er.id = m.end_reason_id
+       WHERE m.id = ? AND m.mentee_id = ?`
+    )
+    .get(mentorshipId, req.currentUser.id);
+
+  if (!mentorship) {
+    setFlash(req, "error", "Mentorship not found.");
+    return res.redirect("/mentee");
+  }
+
+  const goalEntries = parseMentorshipGoalLog(mentorship.goals_log);
+  const goalReadCount = mentorship.mentee_goals_seen_count || 0;
+  if (goalReadCount !== goalEntries.length) {
+    db.prepare("UPDATE mentorships SET mentee_goals_seen_count = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(goalEntries.length, mentorship.id);
+    mentorship.mentee_goals_seen_count = goalEntries.length;
+  }
+
+  return res.render("mentorship-goals", {
+    title: "Mentorship Goals",
+    backHref: "/mentee",
+    backLabel: "Mentee Dashboard",
+    pageHeading: "Mentorship Goals",
+    pageSubheading: `${mentorship.mentor_email} ${mentorship.section_name ? `• ${mentorship.section_name}` : ""}`.trim(),
+    mentorship,
+    goalEntries,
+    entryLabel: "Mentee",
+    submitAction: `/mentee/mentorship/${mentorship.id}/goals`,
+    canAppend: ["pending", "accepted"].includes(mentorship.status),
   });
 });
 
@@ -333,6 +386,55 @@ router.post("/mentorship/:id/end", async (req, res) => {
 
   setFlash(req, "success", "Mentorship ended.");
   return res.redirect("/mentee");
+});
+
+router.post("/mentorship/:id/goals", (req, res) => {
+  const mentorshipId = Number(req.params.id);
+  const goalText = String(req.body.goal_entry || "").trim();
+
+  if (!goalText) {
+    setFlash(req, "error", "Please enter a goal or next step.");
+    return res.redirect(`/mentee/mentorship/${mentorshipId}/goals`);
+  }
+
+  const mentorship = db
+    .prepare(
+      `SELECT m.id, m.status, m.goals_log, m.mentee_goals_seen_count, mentor.email AS mentor_email, s.name AS section_name
+       FROM mentorships m
+       JOIN users mentor ON mentor.id = m.mentor_id
+       LEFT JOIN sections s ON s.id = m.section_id
+       WHERE m.id = ? AND m.mentee_id = ? AND m.status IN ('pending', 'accepted')`
+    )
+    .get(mentorshipId, req.currentUser.id);
+
+  if (!mentorship) {
+    setFlash(req, "error", "Mentorship not found or no longer editable.");
+    return res.redirect(`/mentee/mentorship/${mentorshipId}/goals`);
+  }
+
+  const entry = buildMentorshipGoalEntry("Mentee", goalText);
+  const updatedLog = appendMentorshipGoalLog(mentorship.goals_log, entry);
+  const updatedGoalCount = parseMentorshipGoalLog(updatedLog).length;
+
+  db.prepare("UPDATE mentorships SET goals_log = ?, mentee_goals_seen_count = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(
+    updatedLog,
+    updatedGoalCount,
+    mentorshipId
+  );
+
+  sendSystemEmail({
+    to: mentorship.mentor_email,
+    subject: "A new msg from your Mentee has been submitted.",
+    html: `<p>A new next step record was added by your mentee.</p><p><strong>Entry:</strong></p><p>${escapeHtml(goalText).replace(/\n/g, "<br />")}</p><p><a href="${req.protocol}://${req.get("host")}/mentor/mentorship/${mentorshipId}/goals">Open the goals page</a></p>`,
+    text: `A new next step record was added by your mentee. Entry: ${goalText}. Open the goals page: ${req.protocol}://${req.get("host")}/mentor/mentorship/${mentorshipId}/goals`,
+    eventType: "mentee_goal_entry_added",
+    actorUserId: req.currentUser.id,
+  }).catch((err) => {
+    console.error("Failed to send mentee goal entry email", err);
+  });
+
+  setFlash(req, "success", "Goal updated.");
+  return res.redirect(`/mentee/mentorship/${mentorshipId}/goals`);
 });
 
 module.exports = router;

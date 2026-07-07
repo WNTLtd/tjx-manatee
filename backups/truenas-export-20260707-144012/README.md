@@ -69,45 +69,58 @@ You can update email/password from Account settings after login.
 - SMTP settings are managed in the Admin dashboard.
 - If SMTP is not configured, emails are captured via Nodemailer JSON transport and logged locally.
 
-## Live Deployment (TrueNAS)
+## Deploy on TrueNAS SCALE (Recommended)
 
-The live site runs as a TrueNAS Custom App using image:
+This app can run well on TrueNAS SCALE using Docker/Compose with persistent volumes.
 
-- `ghcr.io/wntltd/tjx-manatee:latest`
+### 1) Prepare datasets
 
-Persistent storage:
+Create a dataset for the app with subfolders:
 
-- `/mnt/myfirstpool/Manatee/data` -> `/app/data`
-- `/mnt/myfirstpool/Manatee/uploads` -> `/app/src/public/uploads`
+- `data` (SQLite database)
+- `uploads` (logo uploads)
 
-Runtime environment variables (production):
+### 2) Configure environment
 
-- `NODE_ENV=production`
-- `PORT=3000`
-- `SESSION_SECRET=<strong random string>`
-- `BASE_URL=https://manatee.whitenoisetouring.com`
-- `TRUST_PROXY=1`
-- `SESSION_COOKIE_SECURE=true`
-- `SESSION_COOKIE_SAMESITE=lax`
+Copy env template and edit values:
 
-## Release Workflow
+```bash
+cp .env.example .env
+```
 
-After local code changes, publish to live in this order:
+Recommended production values:
 
-1. Commit and push to `master`.
-2. Wait for GitHub Action [`.github/workflows/publish-image.yml`](.github/workflows/publish-image.yml) to finish successfully.
-3. In TrueNAS: `Apps` -> `Installed Applications` -> `manatee` -> `Edit` -> `Save` (or `Update`) to pull latest image.
-4. Verify live site behavior.
+- `SESSION_SECRET` to a long random string
+- `BASE_URL` to your public URL (for email links)
+- `TRUST_PROXY=1` when behind reverse proxy
+- `SESSION_COOKIE_SECURE=true` when serving over HTTPS
 
-Rollback option:
+### 3) Build and run
 
-1. In TrueNAS app config, change image tag from `latest` to a previous `sha-...` tag.
-2. Save/Update the app.
+```bash
+docker compose up -d --build
+```
 
-## Operations
+The provided `docker-compose.yml` mounts:
 
-- Back up datasets:
-  - `/mnt/myfirstpool/Manatee/data`
-  - `/mnt/myfirstpool/Manatee/uploads`
-- Keep package/image source available in GHCR (`ghcr.io/wntltd/tjx-manatee`).
-- Rotate admin password and keep secrets out of git.
+- `./data -> /app/data`
+- `./uploads -> /app/src/public/uploads`
+
+### 4) Reverse proxy and TLS
+
+Put Nginx/Caddy/Traefik in front of this app and route HTTPS traffic to container port `3000`.
+
+### 5) TrueNAS app setup (UI path)
+
+If using TrueNAS UI custom app:
+
+- Use repository folder as build context (or prebuilt image)
+- Set container port `3000`
+- Map persistent host paths to `/app/data` and `/app/src/public/uploads`
+- Provide env vars from `.env`
+
+### 6) Operations
+
+- Upgrade: `docker compose pull && docker compose up -d`
+- Logs: `docker compose logs -f manatee`
+- Backup: snapshot/backup the `data` and `uploads` datasets

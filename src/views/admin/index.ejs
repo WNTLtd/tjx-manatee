@@ -28,6 +28,10 @@
         <input name="name" placeholder="Add location" required />
         <button class="btn" type="submit">Add</button>
       </form>
+      <form method="post" action="/admin/locations/import" class="inline-form wrap" enctype="multipart/form-data" autocomplete="off">
+        <input type="file" name="csv_file" accept=".csv,text/csv" required />
+        <button class="btn ghost" type="submit">Import CSV</button>
+      </form>
       <div class="list-box">
         <ul class="item-list edit-list">
           <% locations.forEach((item) => { %>
@@ -54,6 +58,10 @@
         <input name="name" placeholder="Add function" required />
         <button class="btn" type="submit">Add</button>
       </form>
+      <form method="post" action="/admin/sections/import" class="inline-form wrap" enctype="multipart/form-data" autocomplete="off">
+        <input type="file" name="csv_file" accept=".csv,text/csv" required />
+        <button class="btn ghost" type="submit">Import CSV</button>
+      </form>
       <div class="list-box">
         <ul class="item-list edit-list">
           <% sections.forEach((item) => { %>
@@ -79,6 +87,10 @@
       <form method="post" action="/admin/end-reasons" class="inline-form wrap" autocomplete="off">
         <input name="name" placeholder="Add reason" required />
         <button class="btn" type="submit">Add</button>
+      </form>
+      <form method="post" action="/admin/end-reasons/import" class="inline-form wrap" enctype="multipart/form-data" autocomplete="off">
+        <input type="file" name="csv_file" accept=".csv,text/csv" required />
+        <button class="btn ghost" type="submit">Import CSV</button>
       </form>
       <div class="list-box">
         <ul class="item-list edit-list">

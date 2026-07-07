@@ -13,7 +13,7 @@ function attachAuthContext(req, res, next) {
   }
 
   const user = db
-    .prepare("SELECT id, role, email FROM users WHERE id = ?")
+    .prepare("SELECT id, role, email, is_superadmin FROM users WHERE id = ?")
     .get(userId);
 
   if (!user) {
@@ -23,8 +23,13 @@ function attachAuthContext(req, res, next) {
     return next();
   }
 
-  req.currentUser = user;
-  res.locals.currentUser = user;
+  const hydratedUser = {
+    ...user,
+    is_superadmin: Number(user.is_superadmin) === 1,
+  };
+
+  req.currentUser = hydratedUser;
+  res.locals.currentUser = hydratedUser;
   res.locals.flash = req.session.flash || null;
   delete req.session.flash;
   return next();

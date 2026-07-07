@@ -1,7 +1,7 @@
-<%- include("../partials/head", { title: "Account Settings" }) %>
+<%- include("../partials/head", { title: "Profile" }) %>
 <%- include("../partials/header") %>
 <main class="container">
-  <h1>Account Settings</h1>
+  <h1>Profile</h1>
   <%- include("../partials/flash") %>
 
   <section class="card" style="margin-bottom: 1rem;">
@@ -41,7 +41,7 @@
       <label>Job title
         <input type="text" name="job_title" value="<%= user.job_title || '' %>" />
       </label>
-      <button class="btn" type="submit">Update Personal Details</button>
+      <button class="btn" type="submit">Update Profile</button>
     </form>
   </section>
 
@@ -74,6 +74,51 @@
         <button class="btn" type="submit">Update Password</button>
       </form>
     </article>
+  </section>
+
+  <section class="card" style="margin-bottom: 1rem;">
+    <h2>Two-Factor Authentication (Authenticator App)</h2>
+    <% if (Number(user.twofa_enabled) === 1) { %>
+      <p class="hint">2FA is currently enabled for your account.</p>
+      <form method="post" action="/profile/2fa/disable" class="form-grid" autocomplete="off">
+        <label>Current Password
+          <div class="password-row">
+            <input id="disable-2fa-password" type="password" name="currentPassword" required autocomplete="current-password" />
+            <button type="button" class="btn ghost toggle-password" data-target="disable-2fa-password">Show</button>
+          </div>
+        </label>
+        <label>Authenticator Code
+          <input name="token" required inputmode="numeric" pattern="[0-9]{6}" minlength="6" maxlength="6" placeholder="123456" autocomplete="one-time-code" />
+        </label>
+        <button class="btn warning" type="submit">Disable 2FA</button>
+      </form>
+    <% } else if (pendingTwoFactorSetup) { %>
+      <p class="hint">Scan this QR code in Authy (or another authenticator app), then enter the 6-digit code to confirm.</p>
+      <% if (pendingTwoFactorSetup.qrCodeDataUrl) { %>
+        <p><img src="<%= pendingTwoFactorSetup.qrCodeDataUrl %>" alt="2FA QR code" style="max-width: 220px; border: 1px solid var(--line); border-radius: 10px; padding: 0.4rem; background: var(--paper);" /></p>
+      <% } %>
+      <p class="hint"><strong>Manual key:</strong> <%= pendingTwoFactorSetup.secret %></p>
+      <form method="post" action="/profile/2fa/enable" class="form-grid" autocomplete="off">
+        <label>Authenticator Code
+          <input name="token" required inputmode="numeric" pattern="[0-9]{6}" minlength="6" maxlength="6" placeholder="123456" autocomplete="one-time-code" />
+        </label>
+        <button class="btn" type="submit">Enable 2FA</button>
+      </form>
+      <form method="post" action="/profile/2fa/cancel" class="inline-form wrap" style="margin-top: 0.6rem;">
+        <button class="btn ghost" type="submit">Cancel Setup</button>
+      </form>
+    <% } else { %>
+      <p class="hint">Add an extra login step with an authenticator app such as Authy.</p>
+      <form method="post" action="/profile/2fa/setup" class="form-grid" autocomplete="off">
+        <label>Current Password
+          <div class="password-row">
+            <input id="enable-2fa-password" type="password" name="currentPassword" required autocomplete="current-password" />
+            <button type="button" class="btn ghost toggle-password" data-target="enable-2fa-password">Show</button>
+          </div>
+        </label>
+        <button class="btn" type="submit">Set Up 2FA</button>
+      </form>
+    <% } %>
   </section>
 </main>
 <%- include("../partials/footer") %>
