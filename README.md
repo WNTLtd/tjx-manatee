@@ -114,10 +114,50 @@ Put Nginx/Caddy/Traefik in front of this app and route HTTPS traffic to containe
 
 If using TrueNAS UI custom app:
 
-- Use repository folder as build context (or prebuilt image)
+- Use prebuilt image `ghcr.io/wntltd/tjx-manatee:latest`
 - Set container port `3000`
 - Map persistent host paths to `/app/data` and `/app/src/public/uploads`
-- Provide env vars from `.env`
+- Add env vars manually in the App UI (see section below)
+
+### 5a) Make it appear in Installed Applications
+
+If you deployed with `docker compose` in shell, it runs but will not appear in TrueNAS Apps.
+
+To have it listed in TrueNAS Apps:
+
+1. Stop shell-managed container:
+
+```bash
+cd /mnt/<POOL>/manatee/app
+sudo docker compose down
+```
+
+2. In TrueNAS UI: `Apps` -> `Discover Apps` -> `Custom App`.
+3. Set app name: `manatee`.
+4. Set image repository: `ghcr.io/wntltd/tjx-manatee`.
+5. Set image tag: `latest`.
+6. Add port mapping: host `3000` -> container `3000` (or use your preferred host port).
+7. Add host-path volumes:
+  - `/mnt/<POOL>/manatee/data` -> `/app/data`
+  - `/mnt/<POOL>/manatee/uploads` -> `/app/src/public/uploads`
+8. Add environment variables:
+  - `NODE_ENV=production`
+  - `PORT=3000`
+  - `SESSION_SECRET=<long-random-secret>`
+  - `BASE_URL=http://<TRUENAS_IP>:3000` (or HTTPS URL when proxied)
+  - `TRUST_PROXY=0` for direct HTTP, `1` behind reverse proxy
+  - `SESSION_COOKIE_SECURE=false` for direct HTTP, `true` on HTTPS
+  - `SESSION_COOKIE_SAMESITE=lax`
+9. Deploy app. It will now appear in `Installed Applications`.
+
+Note: if GHCR package visibility is private, configure image pull credentials in TrueNAS. For easiest setup, set package visibility to public.
+
+### 5b) Automatic image publishing (GitHub)
+
+This repo includes workflow [`.github/workflows/publish-image.yml`](.github/workflows/publish-image.yml).
+
+- On push to `master`, it publishes `ghcr.io/<owner>/tjx-manatee:latest`.
+- On tag pushes (for example `v1.0.0`), it also publishes tag-based images.
 
 ### 6) Operations
 
