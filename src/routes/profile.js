@@ -12,7 +12,7 @@ router.use(requireAuth);
 
 router.get("/", async (req, res) => {
   const user = db
-    .prepare("SELECT id, role, email, title, pronouns, first_name, surname, job_title, twofa_enabled, twofa_secret FROM users WHERE id = ?")
+    .prepare("SELECT id, role, email, title, pronouns, first_name, surname, job_title, phone, twofa_enabled, twofa_secret FROM users WHERE id = ?")
     .get(req.currentUser.id);
 
   let pendingTwoFactorSetup = null;
@@ -33,10 +33,13 @@ router.get("/", async (req, res) => {
     };
   }
 
+  const isAdmin = req.currentUser.role === "admin";
+
   return res.render("profile/index", {
     title: "Profile",
     user,
     pendingTwoFactorSetup,
+    isAdmin,
   });
 });
 
@@ -46,12 +49,33 @@ router.post("/details", (req, res) => {
   const firstName = String(req.body.first_name || "").trim() || null;
   const surname = String(req.body.surname || "").trim() || null;
   const jobTitle = String(req.body.job_title || "").trim() || null;
+  const phone = String(req.body.phone || "").trim() || null;
 
   db.prepare(
-    "UPDATE users SET title = ?, pronouns = ?, first_name = ?, surname = ?, job_title = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?"
-  ).run(title, pronouns, firstName, surname, jobTitle, req.currentUser.id);
+    "UPDATE users SET title = ?, pronouns = ?, first_name = ?, surname = ?, job_title = ?, phone = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?"
+  ).run(title, pronouns, firstName, surname, jobTitle, phone, req.currentUser.id);
 
   setFlash(req, "success", "Personal details updated.");
+  return res.redirect("/profile");
+});
+
+router.post("/role", (req, res) => {
+  if (req.currentUser.role !== "admin") {
+    setFlash(req, "error", "Only admins can change user roles.");
+    return res.redirect("/profile");
+  }
+
+  const role = String(req.body.role || "").trim();
+  const validRoles = ["admin", "mentor", "mentee", "both"];
+
+  if (!validRoles.includes(role)) {
+    setFlash(req, "error", "Invalid role.");
+    return res.redirect("/profile");
+  }
+
+  db.prepare("UPDATE users SET role = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(role, req.currentUser.id);
+
+  setFlash(req, "success", "Role updated.");
   return res.redirect("/profile");
 });
 

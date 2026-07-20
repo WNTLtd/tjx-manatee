@@ -1,0 +1,62 @@
+<%- include("../partials/head", { title: "Edit User" }) %>
+<%- include("../partials/header") %>
+<main class="container">
+  <div class="inline-form wrap page-head-row">
+    <h1>Edit User</h1>
+    <a class="btn ghost" href="/admin/users">Back to Users</a>
+  </div>
+  <%- include("../partials/flash") %>
+
+  <section class="card">
+    <h2><%= user.email %></h2>
+    <form method="post" action="/admin/users/<%= user.id %>" class="form-grid" autocomplete="off">
+      <label>Title
+        <select name="title">
+          <option value="" <%= !user.title ? 'selected' : '' %>>Select title</option>
+          <option value="Mr" <%= user.title === 'Mr' ? 'selected' : '' %>>Mr</option>
+          <option value="Mrs" <%= user.title === 'Mrs' ? 'selected' : '' %>>Mrs</option>
+          <option value="Ms" <%= user.title === 'Ms' ? 'selected' : '' %>>Ms</option>
+          <option value="Miss" <%= user.title === 'Miss' ? 'selected' : '' %>>Miss</option>
+          <option value="Mx" <%= user.title === 'Mx' ? 'selected' : '' %>>Mx</option>
+          <option value="Dr" <%= user.title === 'Dr' ? 'selected' : '' %>>Dr</option>
+          <option value="Prof" <%= user.title === 'Prof' ? 'selected' : '' %>>Prof</option>
+          <option value="Rev" <%= user.title === 'Rev' ? 'selected' : '' %>>Rev</option>
+        </select>
+      </label>
+      <label>Pronouns
+        <select name="pronouns">
+          <option value="" <%= !user.pronouns ? 'selected' : '' %>>Select pronouns</option>
+          <option value="she/her" <%= user.pronouns === 'she/her' ? 'selected' : '' %>>she/her</option>
+          <option value="he/him" <%= user.pronouns === 'he/him' ? 'selected' : '' %>>he/him</option>
+          <option value="they/them" <%= user.pronouns === 'they/them' ? 'selected' : '' %>>they/them</option>
+          <option value="she/they" <%= user.pronouns === 'she/they' ? 'selected' : '' %>>she/they</option>
+          <option value="he/they" <%= user.pronouns === 'he/they' ? 'selected' : '' %>>he/they</option>
+          <option value="ze/zir" <%= user.pronouns === 'ze/zir' ? 'selected' : '' %>>ze/zir</option>
+          <option value="prefer not to say" <%= user.pronouns === 'prefer not to say' ? 'selected' : '' %>>Prefer not to say</option>
+        </select>
+      </label>
+      <label>First name
+        <input type="text" name="first_name" value="<%= user.first_name || '' %>" required />
+      </label>
+      <label>Surname
+        <input type="text" name="surname" value="<%= user.surname || '' %>" required />
+      </label>
+      <label>Job title
+        <input type="text" name="job_title" value="<%= user.job_title || '' %>" />
+      </label>
+      <label>Phone
+        <input type="tel" name="phone" value="<%= user.phone || '' %>" />
+      </label>
+      <label>Role
+        <select name="role" required>
+          <option value="admin" <%= user.role === 'admin' ? 'selected' : '' %>>Admin</option>
+          <option value="mentor" <%= user.role === 'mentor' ? 'selected' : '' %>>Mentor</option>
+          <option value="mentee" <%= user.role === 'mentee' ? 'selected' : '' %>>Mentee</option>
+          <option value="both" <%= user.role === 'both' ? 'selected' : '' %>>Mentor & Mentee</option>
+        </select>
+      </label>
+      <button class="btn" type="submit">Update User</button>
+    </form>
+  </section>
+</main>
+<%- include("../partials/footer") %>

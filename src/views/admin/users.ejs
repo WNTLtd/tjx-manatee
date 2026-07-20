@@ -54,6 +54,19 @@
               <td>
                 <div class="inline-form row-actions">
                   <% if (user.role !== 'admin' || canManageAdmins) { %>
+                    <% if (!user.is_superadmin) { %>
+                      <a class="btn ghost compact icon-btn" href="/admin/users/<%= user.id %>/edit" aria-label="Edit user" title="Edit user">
+                        <span aria-hidden="true" class="icon-mark">
+                          <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                            <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z"/>
+                            <path d="M20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                          </svg>
+                        </span>
+                        <span class="sr-only">Edit user</span>
+                      </a>
+                    <% } %>
+                  <% } %>
+                  <% if (user.role !== 'admin' || canManageAdmins) { %>
                     <form method="post" action="/admin/users/<%= user.id %>/resend-welcome">
                       <button class="btn ghost compact icon-btn" type="submit" aria-label="Resend welcome email" title="Resend welcome email">
                         <span aria-hidden="true" class="icon-mark">

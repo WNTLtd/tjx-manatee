@@ -58,6 +58,7 @@ function initializeDatabase() {
       first_name TEXT,
       surname TEXT,
       job_title TEXT,
+      phone TEXT,
       created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
       updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     );
@@ -121,6 +122,20 @@ function initializeDatabase() {
       FOREIGN KEY (ended_by_user_id) REFERENCES users(id)
     );
 
+    CREATE TABLE IF NOT EXISTS goal_entries (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      mentorship_id INTEGER NOT NULL,
+      user_id INTEGER NOT NULL,
+      type TEXT NOT NULL CHECK (type IN ('goal', 'action', 'resource', 'update')),
+      content TEXT NOT NULL,
+      file_path TEXT,
+      file_name TEXT,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (mentorship_id) REFERENCES mentorships(id) ON DELETE CASCADE,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+
     CREATE TABLE IF NOT EXISTS smtp_settings (
       id INTEGER PRIMARY KEY CHECK (id = 1),
       host TEXT,
@@ -173,6 +188,7 @@ function initializeDatabase() {
   ensureUsersTwoFactorColumns();
   ensureMentorshipGoalsLogColumn();
   ensureMentorshipGoalReadColumns();
+  ensureGoalEntriesTable();
 
   const adminExists = db.prepare("SELECT id FROM users WHERE role='admin' AND email='admin'").get();
   if (!adminExists) {
@@ -340,6 +356,9 @@ function ensureUserNameColumns() {
   if (!names.includes("job_title")) {
     db.prepare("ALTER TABLE users ADD COLUMN job_title TEXT").run();
   }
+  if (!names.includes("phone")) {
+    db.prepare("ALTER TABLE users ADD COLUMN phone TEXT").run();
+  }
 }
 
 function ensureUsersSuperAdminColumn() {
@@ -410,6 +429,25 @@ function ensureMentorshipGoalReadColumns() {
     const totalEntries = parseMentorshipGoalLog(mentorship.goals_log).length;
     update.run(totalEntries, totalEntries, mentorship.id);
   }
+}
+
+function ensureGoalEntriesTable() {
+  // Create the table if it doesn't exist
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS goal_entries (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      mentorship_id INTEGER NOT NULL,
+      user_id INTEGER NOT NULL,
+      type TEXT NOT NULL CHECK (type IN ('goal', 'action', 'resource', 'update')),
+      content TEXT NOT NULL,
+      file_path TEXT,
+      file_name TEXT,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (mentorship_id) REFERENCES mentorships(id) ON DELETE CASCADE,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+  `);
 }
 
 function tableHasUsersOldForeignKey(tableName) {

@@ -83,8 +83,8 @@
               <td><%= item.end_reason_name || '-' %></td>
               <td>
                 <div class="inline-form wrap">
-                  <a class="btn ghost compact goal-link <%= item.goalUnreadCount > 0 ? 'has-unread-goals' : '' %>" href="/mentee/mentorship/<%= item.id %>/goals" aria-label="Open goals <%= item.goalUnreadCount > 0 ? `(${item.goalUnreadCount} unread)` : '' %>">
-                    Goals
+                  <a class="btn compact goal-link <%= item.goalUnreadCount > 0 ? 'has-unread-goals' : '' %>" href="/mentee/mentorship/<%= item.id %>/goals" aria-label="Open updates <%= item.goalUnreadCount > 0 ? `(${item.goalUnreadCount} unread)` : '' %>">
+                    Updates
                     <% if (item.goalUnreadCount > 0) { %>
                       <sup class="goal-count"><%= item.goalUnreadCount %></sup>
                     <% } %>

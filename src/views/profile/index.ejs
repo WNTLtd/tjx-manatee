@@ -5,6 +5,31 @@
   <%- include("../partials/flash") %>
 
   <section class="card" style="margin-bottom: 1rem;">
+    <h2>Account Information</h2>
+    <% if (isAdmin) { %>
+      <form method="post" action="/profile/role" class="form-grid" autocomplete="off">
+        <label>Role(s)
+          <select name="role">
+            <option value="admin" <%= user.role === 'admin' ? 'selected' : '' %>>Admin</option>
+            <option value="mentor" <%= user.role === 'mentor' ? 'selected' : '' %>>Mentor</option>
+            <option value="mentee" <%= user.role === 'mentee' ? 'selected' : '' %>>Mentee</option>
+            <option value="both" <%= user.role === 'both' ? 'selected' : '' %>>Mentor & Mentee</option>
+          </select>
+        </label>
+        <button class="btn" type="submit">Update Role</button>
+      </form>
+    <% } else { %>
+      <div class="form-grid">
+        <label>Role(s)
+          <div style="padding: 0.5rem; background: var(--bg-soft); border-radius: 4px; border: 1px solid var(--line);">
+            <%= user.role === 'both' ? 'Mentor & Mentee' : (user.role.charAt(0).toUpperCase() + user.role.slice(1)) %>
+          </div>
+        </label>
+      </div>
+    <% } %>
+  </section>
+
+  <section class="card" style="margin-bottom: 1rem;">
     <h2>Personal Details</h2>
     <form method="post" action="/profile/details" class="form-grid" autocomplete="off">
       <label>Title
@@ -40,6 +65,14 @@
       </label>
       <label>Job title
         <input type="text" name="job_title" value="<%= user.job_title || '' %>" />
+      </label>
+      <label>Phone
+        <input type="tel" name="phone" value="<%= user.phone || '' %>" />
+        <% if (user.role === 'mentor' || user.role === 'both') { %>
+          <p class="hint">Only enter your phone number if you are happy to be called from time to time by your Mentees</p>
+        <% } else if (user.role === 'mentee') { %>
+          <p class="hint">Only enter your phone number if you are happy to be called from time to time by your Mentors</p>
+        <% } %>
       </label>
       <button class="btn" type="submit">Update Profile</button>
     </form>

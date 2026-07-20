@@ -905,6 +905,83 @@ router.post("/users/:id/reset-password", async (req, res) => {
   return res.redirect("/admin/users");
 });
 
+router.get("/users/:id/edit", (req, res) => {
+  const userId = Number(req.params.id);
+  if (!userId) {
+    setFlash(req, "error", "Invalid user.");
+    return res.redirect("/admin/users");
+  }
+
+  const user = db
+    .prepare("SELECT id, email, role, is_superadmin, title, pronouns, first_name, surname, job_title, phone FROM users WHERE id = ?")
+    .get(userId);
+
+  if (!user) {
+    setFlash(req, "error", "User not found.");
+    return res.redirect("/admin/users");
+  }
+
+  if (Number(user.is_superadmin) === 1) {
+    setFlash(req, "error", "The superuser account cannot be edited.");
+    return res.redirect("/admin/users");
+  }
+
+  if (user.role === "admin" && !req.currentUser.is_superadmin) {
+    setFlash(req, "error", "Only the superuser can edit admin accounts.");
+    return res.redirect("/admin/users");
+  }
+
+  return res.render("admin/user-edit", {
+    title: "Edit User",
+    user,
+  });
+});
+
+router.post("/users/:id", (req, res) => {
+  const userId = Number(req.params.id);
+  if (!userId) {
+    setFlash(req, "error", "Invalid user.");
+    return res.redirect("/admin/users");
+  }
+
+  const user = db.prepare("SELECT id, role, is_superadmin FROM users WHERE id = ?").get(userId);
+  if (!user) {
+    setFlash(req, "error", "User not found.");
+    return res.redirect("/admin/users");
+  }
+
+  if (Number(user.is_superadmin) === 1) {
+    setFlash(req, "error", "The superuser account cannot be edited.");
+    return res.redirect("/admin/users");
+  }
+
+  if (user.role === "admin" && !req.currentUser.is_superadmin) {
+    setFlash(req, "error", "Only the superuser can edit admin accounts.");
+    return res.redirect("/admin/users");
+  }
+
+  const title = String(req.body.title || "").trim() || null;
+  const pronouns = String(req.body.pronouns || "").trim() || null;
+  const firstName = String(req.body.first_name || "").trim() || null;
+  const surname = String(req.body.surname || "").trim() || null;
+  const jobTitle = String(req.body.job_title || "").trim() || null;
+  const phone = String(req.body.phone || "").trim() || null;
+  const role = String(req.body.role || "").trim();
+  const validRoles = ["admin", "mentor", "mentee", "both"];
+
+  if (!validRoles.includes(role)) {
+    setFlash(req, "error", "Invalid role.");
+    return res.redirect(`/admin/users/${userId}/edit`);
+  }
+
+  db.prepare(
+    "UPDATE users SET title = ?, pronouns = ?, first_name = ?, surname = ?, job_title = ?, phone = ?, role = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?"
+  ).run(title, pronouns, firstName, surname, jobTitle, phone, role, userId);
+
+  setFlash(req, "success", "User updated.");
+  return res.redirect("/admin/users");
+});
+
 router.post("/users/:id/delete", (req, res) => {
   const userId = Number(req.params.id);
   if (!userId) {

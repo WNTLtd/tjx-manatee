@@ -47,6 +47,11 @@
         <input name="job_title" value="<%= profile?.job_title || '' %>" />
       </label>
 
+      <label>Phone
+        <input name="phone" type="tel" value="<%= profile?.phone || '' %>" />
+        <p class="hint">Only enter your phone number if you are happy to be called from time to time by your Mentees</p>
+      </label>
+
       <label>Location
         <select name="location_id" required>
           <option value="">Select location</option>
