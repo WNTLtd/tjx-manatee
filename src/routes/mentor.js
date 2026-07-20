@@ -4,9 +4,22 @@ const { requireRole, setFlash } = require("../middleware/auth");
 const { sendSystemEmail } = require("../utils/mailer");
 const { escapeHtml } = require("../utils/html");
 const { buildMentorshipGoalEntry, appendMentorshipGoalLog, getMentorshipUnreadGoalCount, parseMentorshipGoalLog } = require("../utils/mentorshipGoals");
+const { upload, deleteUploadedFile, getStoragePath } = require("../utils/fileUpload");
 
 const router = express.Router();
 router.use(requireRole("mentor"));
+
+// Middleware wrapper to handle multer errors gracefully
+const uploadWithErrorHandling = (req, res, next) => {
+  upload.single("file")(req, res, (err) => {
+    if (err) {
+      const mentorshipId = Number(req.params.id);
+      setFlash(req, "error", "Invalid file type. Only PDF, JPG, DOC, and DOCX files are allowed.");
+      return res.redirect(`/mentor/mentorship/${mentorshipId}/goals`);
+    }
+    next();
+  });
+};
 
 function getMentorContext(userId) {
   const profile = db
@@ -20,7 +33,8 @@ function getMentorContext(userId) {
          u.pronouns,
          u.first_name,
          u.surname,
-         u.job_title
+         u.job_title,
+         u.phone
        FROM mentor_profiles mp
        JOIN users u ON u.id = mp.user_id
        LEFT JOIN locations l ON l.id = mp.location_id
@@ -57,7 +71,7 @@ router.post("/profile", (req, res) => {
   const quickAvailability = req.body.quick_available;
   const existing = db
     .prepare(
-      `SELECT u.title, u.pronouns, u.first_name, u.surname, u.job_title, mp.location_id, mp.available
+      `SELECT u.title, u.pronouns, u.first_name, u.surname, u.job_title, u.phone, mp.location_id, mp.available
        FROM users u
        JOIN mentor_profiles mp ON mp.user_id = u.id
        WHERE u.id = ?`
@@ -82,6 +96,7 @@ router.post("/profile", (req, res) => {
   const firstName = String(req.body.first_name || existing.first_name || "").trim() || null;
   const surname = String(req.body.surname || existing.surname || "").trim() || null;
   const jobTitle = String(req.body.job_title || existing.job_title || "").trim() || null;
+  const phone = String(req.body.phone || "").trim() || null;
   const sectionIds = Array.isArray(req.body.section_ids)
     ? req.body.section_ids.map(Number).filter(Boolean)
     : req.body.section_ids
@@ -90,12 +105,13 @@ router.post("/profile", (req, res) => {
 
   const before = getMentorContext(req.currentUser.id);
 
-  db.prepare("UPDATE users SET title = ?, pronouns = ?, first_name = ?, surname = ?, job_title = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(
+  db.prepare("UPDATE users SET title = ?, pronouns = ?, first_name = ?, surname = ?, job_title = ?, phone = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(
     title,
     pronouns,
     firstName,
     surname,
     jobTitle,
+    phone,
     req.currentUser.id
   );
 
@@ -148,6 +164,12 @@ router.post("/profile", (req, res) => {
   });
 
   setFlash(req, "success", "Mentor profile updated.");
+  
+  // If called from goals page, redirect back to it
+  if (req.body.mentorship_id) {
+    return res.redirect(`/mentor/mentorship/${req.body.mentorship_id}/goals`);
+  }
+  
   return res.redirect("/mentor");
 });
 
@@ -197,7 +219,15 @@ router.get("/mentorship/:id/goals", (req, res) => {
       `SELECT
          m.*,
          mentor.email AS mentor_email,
+         mentor.title AS mentor_title,
+         mentor.first_name AS mentor_first_name,
+         mentor.surname AS mentor_surname,
+         mentor.phone AS mentor_phone,
          mentee.email AS mentee_email,
+         mentee.title AS mentee_title,
+         mentee.first_name AS mentee_first_name,
+         mentee.surname AS mentee_surname,
+         mentee.phone AS mentee_phone,
          s.name AS section_name,
          er.name AS end_reason_name
        FROM mentorships m
@@ -214,12 +244,17 @@ router.get("/mentorship/:id/goals", (req, res) => {
     return res.redirect("/mentor");
   }
 
-  const goalEntries = parseMentorshipGoalLog(mentorship.goals_log);
-  const goalReadCount = mentorship.mentor_goals_seen_count || 0;
-  if (goalReadCount !== goalEntries.length) {
-    db.prepare("UPDATE mentorships SET mentor_goals_seen_count = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(goalEntries.length, mentorship.id);
-    mentorship.mentor_goals_seen_count = goalEntries.length;
-  }
+  // Fetch goal entries from new table
+  const entries = db
+    .prepare(
+      `SELECT ge.id, ge.user_id, ge.type, ge.content, ge.file_path, ge.file_name, ge.created_at, 
+              u.email, u.first_name, u.surname, u.title
+       FROM goal_entries ge
+       JOIN users u ON u.id = ge.user_id
+       WHERE ge.mentorship_id = ?
+       ORDER BY ge.created_at ASC`
+    )
+    .all(mentorshipId);
 
   return res.render("mentorship-goals", {
     title: "Mentorship Goals",
@@ -228,10 +263,13 @@ router.get("/mentorship/:id/goals", (req, res) => {
     pageHeading: "Mentorship Goals",
     pageSubheading: `${mentorship.mentee_email} ${mentorship.section_name ? `• ${mentorship.section_name}` : ""}`.trim(),
     mentorship,
-    goalEntries,
+    entries,
     entryLabel: "Mentor",
     submitAction: `/mentor/mentorship/${mentorship.id}/goals`,
     canAppend: ["pending", "accepted"].includes(mentorship.status),
+    isFromMentor: true,
+    isFromMentee: false,
+    currentUserId: req.currentUser.id,
   });
 });
 
@@ -320,18 +358,20 @@ router.post("/mentorship/:id/end", async (req, res) => {
   return res.redirect("/mentor");
 });
 
-router.post("/mentorship/:id/goals", (req, res) => {
+router.post("/mentorship/:id/goals", uploadWithErrorHandling, (req, res) => {
   const mentorshipId = Number(req.params.id);
   const goalText = String(req.body.goal_entry || "").trim();
+  const entryType = String(req.body.entry_type || "update").toLowerCase();
 
   if (!goalText) {
-    setFlash(req, "error", "Please enter a goal or next step.");
+    if (req.file) deleteUploadedFile(`/uploads/goal-entries/${req.file.filename}`);
+    setFlash(req, "error", "Please enter text for the entry.");
     return res.redirect(`/mentor/mentorship/${mentorshipId}/goals`);
   }
 
   const mentorship = db
     .prepare(
-      `SELECT m.id, m.status, m.goals_log, m.mentor_goals_seen_count, mentee.email AS mentee_email, s.name AS section_name
+      `SELECT m.id, m.status, mentee.email AS mentee_email, s.name AS section_name
        FROM mentorships m
        JOIN users mentee ON mentee.id = m.mentee_id
        LEFT JOIN sections s ON s.id = m.section_id
@@ -340,19 +380,18 @@ router.post("/mentorship/:id/goals", (req, res) => {
     .get(mentorshipId, req.currentUser.id);
 
   if (!mentorship) {
+    if (req.file) deleteUploadedFile(`/uploads/goal-entries/${req.file.filename}`);
     setFlash(req, "error", "Mentorship not found or no longer editable.");
     return res.redirect(`/mentor/mentorship/${mentorshipId}/goals`);
   }
 
-  const entry = buildMentorshipGoalEntry("Mentor", goalText);
-  const updatedLog = appendMentorshipGoalLog(mentorship.goals_log, entry);
-  const updatedGoalCount = parseMentorshipGoalLog(updatedLog).length;
+  const filePath = req.file ? getStoragePath(req.file.filename) : null;
+  const fileName = req.file ? req.file.originalname : null;
 
-  db.prepare("UPDATE mentorships SET goals_log = ?, mentor_goals_seen_count = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(
-    updatedLog,
-    updatedGoalCount,
-    mentorshipId
-  );
+  db.prepare(
+    `INSERT INTO goal_entries (mentorship_id, user_id, type, content, file_path, file_name, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`
+  ).run(mentorshipId, req.currentUser.id, entryType, goalText, filePath, fileName);
 
   sendSystemEmail({
     to: mentorship.mentee_email,
@@ -365,7 +404,92 @@ router.post("/mentorship/:id/goals", (req, res) => {
     console.error("Failed to send mentor goal entry email", err);
   });
 
-  setFlash(req, "success", "Goal updated.");
+  setFlash(req, "success", "Entry added.");
+  return res.redirect(`/mentor/mentorship/${mentorshipId}/goals`);
+});
+
+router.post("/mentorship/:id/goals/:entryId/edit", uploadWithErrorHandling, (req, res) => {
+  const mentorshipId = Number(req.params.id);
+  const entryId = Number(req.params.entryId);
+  const goalText = String(req.body.goal_entry || "").trim();
+  const entryType = String(req.body.entry_type || "update").toLowerCase();
+  const removeFile = req.body[`remove_file_${entryId}`] === '1';
+
+  if (!goalText) {
+    if (req.file) deleteUploadedFile(`/uploads/goal-entries/${req.file.filename}`);
+    setFlash(req, "error", "Please enter text for the entry.");
+    return res.redirect(`/mentor/mentorship/${mentorshipId}/goals`);
+  }
+
+  const entry = db
+    .prepare(
+      `SELECT ge.* FROM goal_entries ge
+       JOIN mentorships m ON m.id = ge.mentorship_id
+       WHERE ge.id = ? AND ge.user_id = ? AND m.mentor_id = ?`
+    )
+    .get(entryId, req.currentUser.id, req.currentUser.id);
+
+  if (!entry) {
+    if (req.file) deleteUploadedFile(`/uploads/goal-entries/${req.file.filename}`);
+    setFlash(req, "error", "Entry not found or you don't have permission to edit it.");
+    return res.redirect(`/mentor/mentorship/${mentorshipId}/goals`);
+  }
+
+  let filePath = entry.file_path;
+  let fileName = entry.file_name;
+
+  // Handle file removal
+  if (removeFile && entry.file_path) {
+    deleteUploadedFile(entry.file_path);
+    filePath = null;
+    fileName = null;
+  }
+
+  // Delete old file if exists and a new one is uploaded
+  if (req.file && entry.file_path) {
+    deleteUploadedFile(entry.file_path);
+  }
+
+  // Use new file if uploaded
+  if (req.file) {
+    filePath = getStoragePath(req.file.filename);
+    fileName = req.file.originalname;
+  }
+
+  db.prepare(
+    `UPDATE goal_entries SET type = ?, content = ?, file_path = ?, file_name = ?, updated_at = CURRENT_TIMESTAMP
+     WHERE id = ?`
+  ).run(entryType, goalText, filePath, fileName, entryId);
+
+  setFlash(req, "success", "Entry updated.");
+  return res.redirect(`/mentor/mentorship/${mentorshipId}/goals`);
+});
+
+router.post("/mentorship/:id/goals/:entryId/delete", (req, res) => {
+  const mentorshipId = Number(req.params.id);
+  const entryId = Number(req.params.entryId);
+
+  const entry = db
+    .prepare(
+      `SELECT ge.* FROM goal_entries ge
+       JOIN mentorships m ON m.id = ge.mentorship_id
+       WHERE ge.id = ? AND ge.user_id = ? AND m.mentor_id = ?`
+    )
+    .get(entryId, req.currentUser.id, req.currentUser.id);
+
+  if (!entry) {
+    setFlash(req, "error", "Entry not found or you don't have permission to delete it.");
+    return res.redirect(`/mentor/mentorship/${mentorshipId}/goals`);
+  }
+
+  // Delete file if exists
+  if (entry.file_path) {
+    deleteUploadedFile(entry.file_path);
+  }
+
+  db.prepare("DELETE FROM goal_entries WHERE id = ?").run(entryId);
+
+  setFlash(req, "success", "Entry deleted.");
   return res.redirect(`/mentor/mentorship/${mentorshipId}/goals`);
 });
 

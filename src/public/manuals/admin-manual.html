@@ -3,115 +3,195 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Manatee Admin User Manual</title>
+    <title>Manatee Administrator Manual</title>
     <link rel="stylesheet" href="/css/styles.css" />
+    <style>
+      ul { margin: 0.5rem 0 0.5rem 1.5rem; }
+      li { margin: 0.3rem 0; }
+      strong { color: var(--accent); }
+    </style>
   </head>
   <body>
     <main class="container">
       <section class="card">
-        <h1>Manatee Admin User Manual</h1>
-        <p>This guide covers all Admin workflows in Manatee: dashboard management, user administration, matching oversight, list maintenance, SMTP/theme configuration, and reporting.</p>
+        <h1>Manatee Administrator Manual</h1>
+        <p>Welcome to Manatee administration. This guide covers dashboard operations, user management, mentorship lifecycle oversight, system configuration, and reporting tools.</p>
       </section>
 
       <section class="card">
-        <h2>1. Login and Access</h2>
-        <p>1. Go to the login page.</p>
-        <p>2. Sign in with your Admin account.</p>
-        <p>3. If your account has 2FA enabled, enter your authenticator app code to complete login.</p>
-        <p>4. You will land on the Admin Dashboard.</p>
-        <p>Default first-run credentials are admin/admin unless changed.</p>
+        <h2>Getting Started</h2>
+        <h3>Logging In</h3>
+        <ul>
+          <li>Navigate to the login page and enter your admin username and password</li>
+          <li>If two-factor authentication (2FA) is enabled on your account, enter the code from your authenticator app</li>
+          <li>You will be directed to the Admin Dashboard</li>
+        </ul>
+        <p><strong>Default Credentials:</strong> The initial admin account uses username <code>admin</code> with password <code>admin</code>. Change this immediately upon first login.</p>
       </section>
 
       <section class="card">
-        <h2>2. Dashboard Overview</h2>
-        <p>The top cards show live totals:</p>
-        <p>1. Mentors.</p>
-        <p>2. Mentees.</p>
-        <p>3. Pending Requests.</p>
-        <p>4. Live Mentorships.</p>
-        <p>Each card is clickable and opens its detailed list page.</p>
+        <h2>Dashboard Overview</h2>
+        <p>The Admin Dashboard displays four key metrics at the top:</p>
+        <ul>
+          <li><strong>Total Mentors:</strong> Click to view all mentor accounts</li>
+          <li><strong>Total Mentees:</strong> Click to view all mentee accounts</li>
+          <li><strong>Pending Requests:</strong> Click to view open mentorship requests awaiting mentor response</li>
+          <li><strong>Active Mentorships:</strong> Click to view currently accepted mentor-mentee pairs</li>
+        </ul>
+        <p>Each metric card is interactive—click any card to drill into the detailed list view for that category.</p>
       </section>
 
       <section class="card">
-        <h2>3. Managing Lookup Lists</h2>
-        <p>Use dashboard sections to manage:</p>
-        <p>1. Locations.</p>
-        <p>2. Functions.</p>
-        <p>3. Mentorship End Reasons.</p>
-        <p>Each list supports add, inline edit, and bulk delete (when records are not in use).</p>
-        <p>Each list also supports CSV import with sanity checks:</p>
-        <p>1. Blank rows are ignored.</p>
-        <p>2. Duplicate rows inside the file are skipped.</p>
-        <p>3. Existing database duplicates are skipped.</p>
-        <p>Changes are reflected immediately for users.</p>
+        <h2>User Management</h2>
+        <h3>Viewing and Editing Users</h3>
+        <p>Access <strong>Users</strong> from the dashboard to see all registered accounts. For each user, the list displays:</p>
+        <ul>
+          <li>Username and email address</li>
+          <li>Role (Admin, Mentor, Mentee, or Both)</li>
+          <li>Count of active mentorships</li>
+          <li>Account creation and last login timestamps</li>
+        </ul>
+        <h3>User Actions</h3>
+        <ul>
+          <li><strong>Create Admin User:</strong> Only available to superusers. Creates a new admin account with elevated permissions</li>
+          <li><strong>Resend Welcome Email:</strong> Sends or resends the welcome/onboarding email to a user</li>
+          <li><strong>Send Password Reset:</strong> Issues a password reset link that the user can access from the login page</li>
+          <li><strong>Delete User:</strong> Removes a user account. Use caution—this may cascade to mentorships and history records depending on your retention policy</li>
+        </ul>
       </section>
 
       <section class="card">
-        <h2>4. Theme and Branding</h2>
-        <p>Use Theme Settings to control:</p>
-        <p>1. Site color palette.</p>
-        <p>2. Unread goal badge highlight color.</p>
-        <p>3. Company logo upload.</p>
+        <h2>Mentorship Lifecycle Management</h2>
+        <h3>Pending Requests</h3>
+        <p>View all open mentorship requests waiting for mentor action in <strong>Pending Requests</strong>. Each request shows:</p>
+        <ul>
+          <li>Request ID and creation date</li>
+          <li>Mentee name and location</li>
+          <li>Requested function/specialty</li>
+          <li>Status and last update time</li>
+        </ul>
+        <p>You can resend a request reminder to the mentor on behalf of the mentee if needed.</p>
+        <h3>Live Relationships</h3>
+        <p>View all currently active, accepted mentorships in <strong>Live Relationships</strong>. From this page, you can:</p>
+        <ul>
+          <li>View relationship start dates and current status</li>
+          <li>Manually end a relationship (e.g., if urgent termination is needed) by selecting a reason</li>
+          <li>Monitor relationship progress and history</li>
+        </ul>
+        <h3>Relationship History</h3>
+        <p><strong>Relationship History</strong> contains all ended or archived mentorship records. Sort and filter by:</p>
+        <ul>
+          <li>Relationship ID, Status</li>
+          <li>Mentor and Mentee names</li>
+          <li>Location, Function, End Reason</li>
+          <li>Who ended the relationship and when</li>
+        </ul>
+        <p>Use <strong>Export CSV</strong> to download history for reporting, compliance, or external analysis.</p>
+        <h3>Reset Mentor Relationships</h3>
+        <p>If a mentor needs to have all their active/pending relationships cleared, use <strong>Reset Mentor Relationships</strong> to:</p>
+        <ul>
+          <li>Select a specific mentor</li>
+          <li>Archive all non-ended records as "Admin Reset"</li>
+          <li>Preserve full history (nothing is deleted)</li>
+        </ul>
       </section>
 
       <section class="card">
-        <h2>5. SMTP and Email Settings</h2>
-        <p>Configure the system email sender in SMTP and Email Logging:</p>
-        <p>1. SMTP host, port, secure mode.</p>
-        <p>2. SMTP user and password.</p>
-        <p>3. From Email.</p>
-        <p>4. BCC Logging Email (copy of all outbound system emails).</p>
-        <p>After changes, use Test Settings to verify delivery acceptance by the SMTP server.</p>
+        <h2>Reference Data Management</h2>
+        <p>Maintain the lookup lists that users depend on. Access <strong>Locations</strong>, <strong>Functions</strong>, and <strong>Mentorship End Reasons</strong> from the dashboard.</p>
+        <h3>List Operations</h3>
+        <ul>
+          <li><strong>Add:</strong> Click the input box and type a new entry, then press Enter or click Add</li>
+          <li><strong>Edit:</strong> Click any existing entry to edit it inline, then press Enter to save</li>
+          <li><strong>Delete:</strong> Remove entries using the delete button (only available if the entry is not in use)</li>
+        </ul>
+        <h3>CSV Import</h3>
+        <p>Bulk load data by uploading a CSV file. The system performs automatic validation:</p>
+        <ul>
+          <li>Blank rows are skipped</li>
+          <li>Duplicate rows within the file are deduplicated</li>
+          <li>Rows that already exist in the database are skipped</li>
+          <li>Changes are reflected immediately for all users</li>
+        </ul>
       </section>
 
       <section class="card">
-        <h2>6. Users Page</h2>
-        <p>Open Users to view all registered users.</p>
-        <p>For each user you can see role, active relationship counts, and timestamps.</p>
-        <p>From Users you can:</p>
-        <p>1. Create admin users (superuser only).</p>
-        <p>2. Resend welcome emails.</p>
-        <p>3. Send password reset emails.</p>
-        <p>4. Delete users (with role/superuser protections).</p>
+        <h2>System Configuration</h2>
+        <h3>Theme and Branding</h3>
+        <p>Control the visual appearance of Manatee in <strong>Theme Settings</strong>:</p>
+        <ul>
+          <li><strong>Primary Color:</strong> Main accent color used throughout the interface</li>
+          <li><strong>Secondary Color:</strong> Highlight color for unread goal badges and notifications</li>
+          <li><strong>Background Color:</strong> Page background</li>
+          <li><strong>Logo Upload:</strong> Upload your organization's logo (PNG or JPG, recommended size 200×50px or larger)</li>
+        </ul>
+        <h3>SMTP and Email Configuration</h3>
+        <p>Configure outbound email in <strong>SMTP Settings</strong>:</p>
+        <ul>
+          <li><strong>SMTP Host:</strong> Your mail server address (e.g., smtp.gmail.com, smtp.office365.com)</li>
+          <li><strong>SMTP Port:</strong> Port number (typically 25, 587, or 465)</li>
+          <li><strong>Secure Mode:</strong> Enable TLS or SSL as required by your mail server</li>
+          <li><strong>Username &amp; Password:</strong> Authentication credentials for your SMTP account</li>
+          <li><strong>From Email:</strong> The sender email address that appears in all outbound messages</li>
+          <li><strong>BCC Logging Email (optional):</strong> A copy of every email sent will be BCC'd to this address for audit/compliance</li>
+        </ul>
+        <p>After entering SMTP settings, click <strong>Test Settings</strong> to verify that the server accepts your configuration. A test email will be sent to the "From Email" address.</p>
       </section>
 
       <section class="card">
-        <h2>7. Pending Requests</h2>
-        <p>Open Pending Requests to view all mentorship requests waiting for mentor action.</p>
-        <p>Admin can resend a request reminder to the mentor on behalf of the mentee.</p>
+        <h2>Auditing and Compliance</h2>
+        <h3>Audit Log</h3>
+        <p>The <strong>Audit Log</strong> records all system events including:</p>
+        <ul>
+          <li>Email sends and delivery status (success or failure)</li>
+          <li>SMTP configuration test results</li>
+          <li>User account activity (login, password reset, etc.)</li>
+          <li>Mentorship workflow changes (requests, acceptances, endings)</li>
+        </ul>
+        <p>Filter the log by:</p>
+        <ul>
+          <li>Event type (email, auth, workflow, etc.)</li>
+          <li>Status (success, failure, pending)</li>
+          <li>Recipient email or user</li>
+          <li>Date range</li>
+        </ul>
+        <p>Use the audit log to troubleshoot issues, verify email delivery, and maintain compliance records.</p>
       </section>
 
       <section class="card">
-        <h2>8. Live Relationships</h2>
-        <p>Open Live Relationships to view all accepted mentorship pairs currently active.</p>
-        <p>Admin can remove a live relationship, which archives it as ended with an admin reset reason.</p>
+        <h2>Administrator Best Practices</h2>
+        <ul>
+          <li><strong>Security:</strong> Change the default admin password on first login. Use a strong, unique password and consider enabling 2FA.</li>
+          <li><strong>Email Configuration:</strong> Test SMTP settings in a staging environment before deploying to production. Ensure the "From Email" matches your SMTP authenticated sender (many mail providers require this).</li>
+          <li><strong>Reference Data:</strong> Keep Locations, Functions, and End Reasons up to date. Invalid data discourages user adoption.</li>
+          <li><strong>Monitoring:</strong> Review the Audit Log weekly for email failures or unusual activity. Investigate failed emails immediately.</li>
+          <li><strong>Backups &amp; Exports:</strong> Regularly export relationship history for backup and compliance purposes, especially if your retention policy requires historical records.</li>
+          <li><strong>User Lifecycle:</strong> When removing a user, understand the cascade impact on their mentorships and goal records.</li>
+          <li><strong>Branding:</strong> Upload a high-quality logo and test theme colors across different browsers to ensure consistent appearance.</li>
+        </ul>
       </section>
 
       <section class="card">
-        <h2>9. Reset Mentor Relationships</h2>
-        <p>Use Reset Mentor Relationships to archive non-ended records for one selected mentor.</p>
-        <p>This does not erase ended history; it marks active/pending records as ended with an Admin reset reason.</p>
-      </section>
-
-      <section class="card">
-        <h2>10. Relationship History and Export</h2>
-        <p>Relationship History shows historical mentorship lifecycle records.</p>
-        <p>Use Export CSV to download history for reporting or compliance.</p>
-      </section>
-
-      <section class="card">
-        <h2>11. Audit Log</h2>
-        <p>Audit Log shows email/audit events such as sends, failures, SMTP test outcomes, and workflow notifications.</p>
-        <p>Use filters for event type, status, recipient, and date range.</p>
-      </section>
-
-      <section class="card">
-        <h2>12. Admin Best Practices</h2>
-        <p>1. Keep From Email aligned with SMTP authenticated sender unless your mail platform supports verified aliases.</p>
-        <p>2. Use SMTP test before going live.</p>
-        <p>3. Review audit logs frequently for failed emails.</p>
-        <p>4. Export relationship history regularly if required by policy.</p>
-        <p>5. Use superuser-only controls carefully for admin account management.</p>
+        <h2>Troubleshooting</h2>
+        <h3>Emails Not Sending</h3>
+        <ul>
+          <li>Check SMTP settings in Theme Settings → SMTP Configuration</li>
+          <li>Click "Test Settings" to verify the connection</li>
+          <li>Review the Audit Log for error messages</li>
+          <li>Verify that the "From Email" is allowed by your SMTP provider</li>
+        </ul>
+        <h3>User Cannot Log In</h3>
+        <ul>
+          <li>Verify the user exists in the Users list</li>
+          <li>Send a password reset email</li>
+          <li>If 2FA is causing issues, ask the user to verify their authenticator app is synchronized</li>
+        </ul>
+        <h3>Mentorship Request Stuck</h3>
+        <ul>
+          <li>Check Pending Requests list</li>
+          <li>Verify the mentor's availability is turned on</li>
+          <li>Manually resend the request reminder via the admin interface</li>
+        </ul>
       </section>
     </main>
   </body>

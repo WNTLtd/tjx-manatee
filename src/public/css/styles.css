@@ -21,6 +21,8 @@
   --flash-error-bg: #fdecee;
   --flash-error-text: #8f1d2f;
   --danger-soft: #f3c9cf;
+  --alt-bg-1: #ffffff;
+  --alt-bg-2: #f0f0f0;
   --radius: 14px;
 }
 
@@ -84,7 +86,7 @@ nav a {
 }
 
 .container {
-  max-width: 1100px;
+  max-width: 1600px;
   margin: 1.5rem auto;
   padding: 0 1rem 2rem;
 }
@@ -256,8 +258,8 @@ button {
   border: 1px solid var(--line);
   border-radius: 10px;
   padding: 0.5rem;
-  font-size: 0.85rem;
-  line-height: 1.35;
+  font-size: 0.8rem;
+  line-height: 0.9;
 }
 
 .goal-log-page {
@@ -265,8 +267,22 @@ button {
 }
 
 .goal-log-entry {
-  padding: 0.1rem 0;
+  padding: 0 0 0 0;
+  margin: 0 !important;
   border-bottom: 1px solid color-mix(in srgb, var(--line) 65%, transparent);
+  overflow: visible;
+  display: flex !important;
+  flex-direction: row;
+  gap: 0;
+  line-height: 1;
+}
+
+.goal-log-entry:nth-child(odd) {
+  background: var(--alt-bg-1);
+}
+
+.goal-log-entry:nth-child(even) {
+  background: var(--alt-bg-2);
 }
 
 .goal-log-entry:first-child {
@@ -282,6 +298,18 @@ button {
   display: inline-flex;
   align-items: center;
   gap: 0.2rem;
+  font-weight: 600;
+  background: linear-gradient(135deg, #0057ff 0%, #0045cc 100%);
+  color: white !important;
+  border-color: #0045cc !important;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.goal-link:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 87, 255, 0.3);
+  background: linear-gradient(135deg, #0045cc 0%, #003399 100%);
 }
 
 .goal-count {

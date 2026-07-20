@@ -3,81 +3,218 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Manatee Mentee User Manual</title>
+    <title>Manatee Mentee Manual</title>
     <link rel="stylesheet" href="/css/styles.css" />
+    <style>
+      ul { margin: 0.5rem 0 0.5rem 1.5rem; }
+      li { margin: 0.3rem 0; }
+      strong { color: var(--accent); }
+    </style>
   </head>
   <body>
     <main class="container">
       <section class="card">
-        <h1>Manatee Mentee User Manual</h1>
-        <p>This guide explains how Mentees create requests, track statuses, and manage mentorship goals in Manatee.</p>
+        <h1>Manatee Mentee Manual</h1>
+        <p>Welcome! This guide helps you find a mentor, manage your mentorship requests, and collaborate with your mentor through the Manatee mentoring platform.</p>
       </section>
 
       <section class="card">
-        <h2>1. Account and Login</h2>
-        <p>1. Register as Mentee or Both.</p>
-        <p>2. You are logged in immediately after account creation.</p>
-        <p>3. Return users sign in from the login page.</p>
-        <p>4. If 2FA is enabled, enter your authenticator app code to complete login.</p>
+        <h2>Getting Started</h2>
+        <h3>Joining Manatee</h3>
+        <ul>
+          <li>Click <strong>Sign Up</strong> and select <strong>Mentee</strong> or <strong>Both (Mentor and Mentee)</strong></li>
+          <li>Enter your email, create a strong password, and confirm your account</li>
+          <li>You will be logged in immediately and redirected to your Mentee Dashboard</li>
+          <li>Returning users can log in at any time using the login page</li>
+        </ul>
+        <h3>Two-Factor Authentication (2FA)</h3>
+        <p>For enhanced security, you can enable 2FA on your account:</p>
+        <ul>
+          <li>Go to <strong>Profile Settings</strong> and select <strong>Enable 2FA</strong></li>
+          <li>Scan the QR code with an authenticator app (Authy, Google Authenticator, Microsoft Authenticator, etc.)</li>
+          <li>Enter the 6-digit code from your app to verify setup</li>
+          <li>On future logins, you will be prompted to enter a code from your authenticator app</li>
+        </ul>
       </section>
 
       <section class="card">
-        <h2>2. Profile Setup</h2>
-        <p>Complete your profile details:</p>
-        <p>1. Title, First name, Surname, Job title.</p>
-        <p>2. Location (required for matching).</p>
-        <p>Save profile to activate mentor matching.</p>
+        <h2>Setting Up Your Profile</h2>
+        <h3>Complete Your Information</h3>
+        <p><strong>Important:</strong> Before you can search for mentors, you must set up your profile. Go to the <strong>Mentee Dashboard</strong> and fill in:</p>
+        <ul>
+          <li><strong>Personal Details:</strong> Title (optional), First Name, Surname, Job Title</li>
+          <li><strong>Location:</strong> Your geographic location (required—mentors are matched by location)</li>
+          <li><strong>Phone Number (optional):</strong> Provide if you're comfortable with mentors reaching out by phone</li>
+        </ul>
+        <p>Click <strong>Update Profile</strong> to save. Once your profile is complete, you can start searching for mentors.</p>
       </section>
 
       <section class="card">
-        <h2>3. Finding Mentors</h2>
-        <p>In Find Mentors:</p>
-        <p>1. Select a function.</p>
-        <p>2. Review available mentors for your location and function.</p>
-        <p>3. Click Request Mentorship.</p>
+        <h2>Finding and Requesting a Mentor</h2>
+        <h3>Search for Available Mentors</h3>
+        <p>Click <strong>Find Mentors</strong> to discover available mentors in your area. To refine your search:</p>
+        <ul>
+          <li><strong>Select a Function:</strong> Choose the professional specialty you need help with (e.g., Operations, Finance, HR, Technology)</li>
+          <li><strong>Browse Results:</strong> The system displays all available mentors in your location who specialize in that function</li>
+          <li><strong>Review Details:</strong> Each mentor card shows their name, job title, and expertise</li>
+        </ul>
+        <h3>Send a Mentorship Request</h3>
+        <ul>
+          <li>Click <strong>Request Mentorship</strong> on a mentor's profile</li>
+          <li>Your request is sent to the mentor immediately</li>
+          <li>The mentor receives an email notification and can accept or decline</li>
+          <li>Your request appears in your <strong>Your Mentorships</strong> list with a "pending" status</li>
+        </ul>
+        <h3>What Happens Next?</h3>
+        <ul>
+          <li>You will receive an email when the mentor responds</li>
+          <li>If accepted, the relationship status changes to "accepted" and you gain access to the shared Next Step Record (goals page)</li>
+          <li>If declined, the mentor may include a message explaining why or offering alternative help</li>
+        </ul>
       </section>
 
       <section class="card">
-        <h2>4. Managing Pending Requests</h2>
-        <p>In Your Mentorships, pending rows support:</p>
-        <p>1. Resend Request (send reminder to mentor).</p>
-        <p>2. Remove Request (cancel your pending request).</p>
-        <p>When you cancel, the mentor is notified by email.</p>
+        <h2>Managing Your Mentorship Requests</h2>
+        <h3>Your Mentorships List</h3>
+        <p>Visit <strong>Your Mentorships</strong> to see all your mentorship relationships. Each row shows:</p>
+        <ul>
+          <li><strong>Mentor name</strong> and their job title</li>
+          <li><strong>Function</strong> you requested help with</li>
+          <li><strong>Status:</strong> Pending (waiting for mentor), Accepted (active), or Ended (completed)</li>
+          <li><strong>Start date</strong> and last update time</li>
+        </ul>
+        <h3>Pending Request Actions</h3>
+        <p>While a request is pending, you can:</p>
+        <ul>
+          <li><strong>Resend Request:</strong> Send a reminder to the mentor if they haven't responded (useful after 3-5 days)</li>
+          <li><strong>Cancel Request:</strong> Withdraw your request if you no longer need mentoring. The mentor receives a cancellation notification.</li>
+        </ul>
+        <p><strong>Tip:</strong> Avoid sending multiple requests to the same mentor for the same function. One polite reminder is usually sufficient.</p>
       </section>
 
       <section class="card">
-        <h2>5. Active Mentorships and Goals</h2>
-        <p>When accepted, status changes to accepted.</p>
-        <p>Use the Goals button to open the dedicated mentorship goals page.</p>
-        <p>On the goals page you can:</p>
-        <p>1. Review the Next step record log (latest entries at the top).</p>
-        <p>2. Add new mentee-side entries.</p>
-        <p>3. View entries from both mentee and mentor.</p>
-        <p>In the dashboard list, a small unread count badge on Goals indicates new entries from the other party.</p>
-        <p>You can end active mentorships with an end reason from the list.</p>
+        <h2>Active Mentorships and Goal Records</h2>
+        <h3>Collaboration Space</h3>
+        <p>Once your mentor accepts, click the <strong>Goals</strong> button to enter your shared workspace called the <strong>Next Step Record</strong>. This is where you and your mentor collaborate, track progress, and share resources.</p>
+        <h3>How to Use the Next Step Record</h3>
+        <ul>
+          <li><strong>View the Log:</strong> All entries from both you and your mentor appear here, with the newest at the top</li>
+          <li><strong>Add Entries:</strong> Create entries to share goals, action items, updates, questions, or resources with your mentor. You can:
+            <ul>
+              <li>Select an entry type: Goal, Action Item, Resource, or Update</li>
+              <li>Type your message (you can include URLs which will become clickable links)</li>
+              <li>Optionally attach a file (PDF, JPG, DOC, DOCX, up to 10MB)</li>
+            </ul>
+          </li>
+          <li><strong>Edit Your Entries:</strong> Click the pencil icon (✏️) on any of your entries to:
+            <ul>
+              <li>Change the entry text</li>
+              <li>Add, replace, or remove an attached file</li>
+            </ul>
+          </li>
+          <li><strong>Delete Entries:</strong> Click the trash icon (🗑️) to remove an entry. A confirmation will be shown before deletion.</li>
+          <li><strong>Download Attachments:</strong> Click the paperclip icon (📎) to download files your mentor or you have shared</li>
+        </ul>
+        <h3>Entry Types</h3>
+        <ul>
+          <li><strong>Goal:</strong> A long-term objective or milestone</li>
+          <li><strong>Action Item:</strong> A specific task or next step to complete</li>
+          <li><strong>Resource:</strong> A link, document, course, or tool to learn from</li>
+          <li><strong>Update:</strong> Progress notes, questions, or general information</li>
+        </ul>
+        <h3>Unread Indicators</h3>
+        <p>In your Mentorships list, a small badge on the Goals button shows how many new entries your mentor has added. The badge clears once you view the goals page.</p>
+        <h3>Ending a Mentorship</h3>
+        <p>When you've achieved your goals or need to close the relationship, click <strong>End Mentorship</strong> and select a reason from the list (e.g., "Goals Achieved", "No Longer Available", "Other"). Your mentor will be notified.</p>
       </section>
 
       <section class="card">
-        <h2>6. Emails You Receive</h2>
-        <p>You may receive emails for:</p>
-        <p>1. Profile welcome/update confirmations.</p>
-        <p>2. Mentor accept/decline outcomes (with optional message).</p>
-        <p>3. Relationship-ended notifications.</p>
-        <p>4. New next-step goal entry notifications from your mentor.</p>
+        <h2>Email Notifications</h2>
+        <p>You will receive email notifications for:</p>
+        <ul>
+          <li><strong>Welcome/Confirmation:</strong> Confirmation that your account was created or profile updated</li>
+          <li><strong>Mentor Response:</strong> When a mentor accepts or declines your request (may include a message)</li>
+          <li><strong>Mentorship Ended:</strong> When your mentor ends the relationship</li>
+          <li><strong>New Goal Entry:</strong> When your mentor adds a new entry to your shared Next Step Record</li>
+          <li><strong>Resend Reminders:</strong> If requested by admin (a friendly reminder to check if the mentor has responded)</li>
+        </ul>
+        <p>All notification emails contain direct links to your dashboard for quick access.</p>
       </section>
 
       <section class="card">
-        <h2>7. Profile Page Settings</h2>
-        <p>Use Profile to change email, password, and personal details at any time.</p>
-        <p>You can also set up or disable 2FA using an authenticator app such as Authy.</p>
+        <h2>Account Settings and Security</h2>
+        <h3>Updating Your Profile</h3>
+        <p>Visit <strong>Profile Settings</strong> to:</p>
+        <ul>
+          <li>Update your personal information (name, title, location)</li>
+          <li>Change your email address</li>
+          <li>Update your password</li>
+          <li>Enable or disable 2FA</li>
+        </ul>
+        <h3>Password Best Practices</h3>
+        <ul>
+          <li>Use a password at least 8 characters long</li>
+          <li>Include uppercase, lowercase, numbers, and special characters</li>
+          <li>Never share your password with anyone</li>
+          <li>If you suspect your account is compromised, change your password immediately</li>
+        </ul>
       </section>
 
       <section class="card">
-        <h2>8. Good Mentee Workflow</h2>
-        <p>1. Keep location updated.</p>
-        <p>2. Avoid duplicate requests for the same mentor/function.</p>
-        <p>3. Use resend only when needed.</p>
-        <p>4. End relationships with clear reason selection.</p>
+        <h2>Best Practices for Getting the Most from Mentoring</h2>
+        <ul>
+          <li><strong>Keep Your Profile Current:</strong> Update your location and job title so mentors can find and understand you. Mentors are more likely to accept requests from complete profiles.</li>
+          <li><strong>Be Specific with Requests:</strong> Request mentoring for specific functions where you genuinely need help. Avoid requesting multiple mentors for the same goal unless absolutely necessary.</li>
+          <li><strong>Be Patient:</strong> Mentors are busy professionals. Allow 3-5 days for a response before sending a reminder. Don't spam with repeated requests.</li>
+          <li><strong>Engage Actively:</strong> Use the Next Step Record regularly. Add updates, ask questions, and share progress. Engaged mentees get more value from their mentors.</li>
+          <li><strong>Come Prepared:</strong> When adding entries, be specific. Instead of "I'm stuck," try "I need help with X because Y. Here's what I've tried..."</li>
+          <li><strong>Use Resources:</strong> If your mentor shares links or documents, review them and provide feedback. This shows you value their effort.</li>
+          <li><strong>Set Clear Goals:</strong> Use the "Goal" entry type to establish what you want to achieve. Clear goals help both of you stay focused.</li>
+          <li><strong>Respect Their Time:</strong> Mentors volunteer their expertise. Be courteous, avoid last-minute asks, and show appreciation for their guidance.</li>
+          <li><strong>End with Gratitude:</strong> When finishing the mentorship, use the Next Step Record to thank your mentor and summarize what you learned.</li>
+        </ul>
+      </section>
+
+      <section class="card">
+        <h2>Troubleshooting</h2>
+        <h3>I can't find the "Find Mentors" button</h3>
+        <ul>
+          <li>First, complete your profile (name, location). This is required to search.</li>
+          <li>Click <strong>Update Profile</strong> to save</li>
+          <li>Then return to the dashboard—the "Find Mentors" button should appear</li>
+        </ul>
+        <h3>A mentor declined my request but I didn't receive an email</h3>
+        <ul>
+          <li>Check your spam/junk folder</li>
+          <li>Visit your <strong>Your Mentorships</strong> list—the request status will show as "ended" with the decline reason</li>
+          <li>If your email is wrong, update it in Profile Settings</li>
+        </ul>
+        <h3>I sent a request but it disappeared from my list</h3>
+        <ul>
+          <li>The request may have been declined. Check the status in <strong>Your Mentorships</strong>.</li>
+          <li>Ended mentorships remain visible in your list for your records</li>
+        </ul>
+        <h3>I can't add entries to the Next Step Record</h3>
+        <ul>
+          <li>Check that the mentorship status is "accepted" (not "pending" or "ended")</li>
+          <li>Try refreshing the page</li>
+          <li>Ensure you're using a supported file format if attaching a file (PDF, JPG, DOC, DOCX, max 10MB)</li>
+          <li>If the issue persists, contact your administrator</li>
+        </ul>
+        <h3>I forgot my password</h3>
+        <ul>
+          <li>Click <strong>Forgot password?</strong> on the login page</li>
+          <li>Enter your email address</li>
+          <li>Check your email for a password reset link</li>
+          <li>Follow the link to create a new password</li>
+        </ul>
+        <h3>My mentor hasn't responded to my request</h3>
+        <ul>
+          <li>Wait 3-5 business days before resending</li>
+          <li>Click <strong>Resend Request</strong> to send a reminder</li>
+          <li>If still no response after another week, try requesting a different mentor</li>
+          <li>Some mentors may be temporarily unavailable—try again later</li>
+        </ul>
       </section>
     </main>
   </body>

@@ -14,44 +14,314 @@
   <%- include("partials/flash") %>
 
   <section class="card stack-cards">
+    <!-- Top section: Other party info on left, Details on right -->
     <div class="grid-2">
-      <article class="card">
-        <h2>Mentor</h2>
-        <p><strong><%= mentorship.mentor_email %></strong></p>
-      </article>
-      <article class="card">
-        <h2>Mentee</h2>
-        <p><strong><%= mentorship.mentee_email %></strong></p>
-      </article>
-    </div>
+      <div>
+        <% if (isFromMentee) { %>
+          <!-- Mentee viewing: Show Mentor details -->
+          <article class="card">
+            <h2>Mentor</h2>
+            <% const mentorName = [mentorship.mentor_title, mentorship.mentor_first_name, mentorship.mentor_surname].filter(Boolean).join(' ') || mentorship.mentor_email %>
+            <p><strong>Name:</strong> <%= mentorName %></p>
+            <p><strong>Email:</strong> <span class="muted-small"><%= mentorship.mentor_email %></span></p>
+            <% if (mentorship.mentor_phone) { %>
+              <p><strong>Phone:</strong> <%= mentorship.mentor_phone %></p>
+              <p class="muted-small">This Mentor has provided their phone number, which indicates they are happy to be called from time to time</p>
+            <% } else { %>
+              <p><strong>Phone:</strong> <span class="muted-small">-</span></p>
+            <% } %>
+          </article>
+        <% } else { %>
+          <!-- Mentor viewing: Show Mentee details -->
+          <article class="card">
+            <h2>Mentee</h2>
+            <% const menteeName = [mentorship.mentee_title, mentorship.mentee_first_name, mentorship.mentee_surname].filter(Boolean).join(' ') || mentorship.mentee_email %>
+            <p><strong>Name:</strong> <%= menteeName %></p>
+            <p><strong>Email:</strong> <span class="muted-small"><%= mentorship.mentee_email %></span></p>
+            <% if (mentorship.mentee_phone) { %>
+              <p><strong>Phone:</strong> <%= mentorship.mentee_phone %></p>
+              <p class="muted-small">This Mentee has provided their phone number, which indicates they are happy to be called from time to time</p>
+            <% } else { %>
+              <p><strong>Phone:</strong> <span class="muted-small">-</span></p>
+            <% } %>
+          </article>
+        <% } %>
+      </div>
 
-    <div class="grid-2">
+      <!-- Details section on the right -->
       <article class="card">
         <h2>Details</h2>
         <p><strong>Function:</strong> <%= mentorship.section_name || 'N/A' %></p>
         <p><strong>Status:</strong> <%= mentorship.status %></p>
         <p><strong>End reason:</strong> <%= mentorship.end_reason_name || '-' %></p>
       </article>
-      <article class="card">
-        <h2>Next step record</h2>
-        <% if (goalEntries && goalEntries.length > 0) { %>
-          <div class="goal-log goal-log-page">
-            <% goalEntries.forEach((entry) => { %>
-              <div class="goal-log-entry"><%= entry %></div>
-            <% }) %>
-          </div>
-        <% } else { %>
-          <p class="muted-small">No goals recorded yet.</p>
-        <% } %>
-      </article>
     </div>
+
+    <!-- Next step record - full width -->
+    <article class="card">
+      <h2>Next step record</h2>
+      <% if (entries && entries.length > 0) { %>
+        <!-- Edit forms appear above entries (expanded) -->
+        <% entries.forEach((entry) => { %>
+          <% if ((isFromMentor && entry.user_id === mentorship.mentor_id) || (isFromMentee && entry.user_id === mentorship.mentee_id)) { %>
+            <div id="edit-form-<%= entry.id %>" style="display: none; padding: 1rem; background: #f9f9f9; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 1rem;">
+              <h3 style="margin-top: 0; margin-bottom: 0.5rem; font-size: 1rem;">Edit entry</h3>
+              <form method="post" action="<%= submitAction.replace('/goals', '/goals/' + entry.id + '/edit') %>" enctype="multipart/form-data" class="form-grid" data-entry-id="<%= entry.id %>">
+                <label>
+                  Type
+                  <select name="entry_type">
+                    <option value="goal" <%= entry.type === 'goal' ? 'selected' : '' %>>Goal</option>
+                    <option value="action" <%= entry.type === 'action' ? 'selected' : '' %>>Action Item</option>
+                    <option value="resource" <%= entry.type === 'resource' ? 'selected' : '' %>>Resource</option>
+                    <option value="update" <%= entry.type === 'update' ? 'selected' : '' %>>Update</option>
+                  </select>
+                </label>
+                <label>
+                  Text
+                  <textarea name="goal_entry" rows="3"><%= entry.content %></textarea>
+                </label>
+                <label>
+                  File (PDF, JPG, DOC, DOCX - max 10MB)
+                  <input type="file" name="file" accept=".pdf,.jpg,.jpeg,.doc,.docx" class="edit-file-input" />
+                  <% if (entry.file_name) { %>
+                    <div style="display: flex; gap: 0.5rem; align-items: center; margin-top: 0.25rem;">
+                      <small>Current: <%= entry.file_name %></small>
+                      <button type="button" class="btn ghost" style="padding: 0.1rem 0.4rem; font-size: 0.85rem;" onclick="removeFile(<%= entry.id %>);">Remove File</button>
+                      <input type="hidden" name="remove_file_<%= entry.id %>" id="remove_file_<%= entry.id %>" value="0" />
+                    </div>
+                  <% } %>
+                  <small class="edit-file-error" style="color: #a6102a; display: none; margin-top: 0.25rem; font-weight: 500;"></small>
+                </label>
+                <div style="display: flex; gap: 0.5rem;">
+                  <button class="btn" type="submit">Save Changes</button>
+                  <button class="btn ghost" type="button" onclick="toggleEditForm(<%= entry.id %>);">Cancel</button>
+                </div>
+              </form>
+            </div>
+          <% } %>
+        <% }); %>
+        
+        <!-- Scrollable entries list -->
+        <div class="goal-log goal-log-page">
+          <% entries.forEach((entry) => { 
+            const categoryLabels = { 'goal': 'Goal', 'action': 'Action Item', 'resource': 'Resource', 'update': 'Update' };
+            const categoryColor = entry.type === 'goal' ? '#0057ff' : entry.type === 'action' ? '#008000' : entry.type === 'resource' ? '#ff9900' : '#666';
+            const authorName = [entry.title, entry.first_name, entry.surname].filter(Boolean).join(' ') || entry.email;
+          %>
+            <div class="goal-log-entry" style="display: flex; flex-direction: column; gap: 0.01rem; padding: 0; line-height: 1;">
+              <div style="display: flex; flex-wrap: nowrap; align-items: center; gap: 0.08rem; margin: 0; line-height: 1;">
+                <span style="background: <%= categoryColor %>; color: white; padding: 0.02rem 0.5rem; border-radius: 1px; font-size: 0.75rem; font-weight: bold; margin: 0; line-height: 1; display: inline-block; text-align: center; white-space: nowrap; flex: 0 0 auto;">
+                  <%= categoryLabels[entry.type] || 'Update' %>
+                </span>
+                <span style="font-size: 0.9rem; color: #888; margin: 0; line-height: 1; flex: 1 1 auto; min-width: 0;">
+                  <strong><%= authorName %></strong> • <%= new Date(entry.created_at).toLocaleDateString() %> <%= new Date(entry.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) %>
+                </span>
+                <div style="display: flex; gap: 0.5rem; margin: 0; line-height: 1; align-items: center; flex: 0 0 auto; position: relative; z-index: 10; pointer-events: auto;">
+                  <% if (entry.file_path) { %>
+                    <a href="<%= entry.file_path %>" target="_blank" rel="noopener noreferrer" style="padding: 0.1rem 0.15rem !important; margin: 0 !important; border: none !important; background: none !important; font-size: 1rem !important; line-height: 1 !important; width: auto !important; height: auto !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; cursor: pointer !important; text-decoration: none; pointer-events: auto;" title="Attachment: <%= entry.file_name %>">📎</a>
+                  <% } %>
+                  <% if (entry.user_id === currentUserId) { %>
+                    <button class="btn ghost" style="padding: 0.1rem 0.15rem !important; margin: 0 !important; border: none !important; background: none !important; font-size: 1rem !important; line-height: 1 !important; width: auto !important; height: auto !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; cursor: pointer !important; pointer-events: auto;" type="button" onclick="toggleEditForm(<%= entry.id %>);" title="Edit">✏️</button>
+                    <form method="post" action="<%= submitAction.replace('/goals', '/goals/' + entry.id + '/delete') %>" style="display: inline-flex; margin: 0 !important; padding: 0 !important; align-items: center; pointer-events: auto;">
+                      <button class="btn ghost" style="padding: 0.1rem 0.15rem !important; margin: 0 !important; border: none !important; background: none !important; font-size: 1rem !important; line-height: 1 !important; width: auto !important; height: auto !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; cursor: pointer !important; pointer-events: auto;" type="submit" onclick="return confirm('Are you sure you want to delete this entry?');" title="Delete">🗑️</button>
+                    </form>
+                  <% } %>
+                </div>
+              </div>
+              <div style="font-size: 0.9rem; word-break: break-word; line-height: 1; margin: -2.8rem 0 0 0; padding: 0; position: relative; z-index: 1;">
+                <% const urlRegex = /(https?:\/\/[^\s]+)/g; %>
+                <% const contentWithLinks = entry.content.replace(urlRegex, '<a href="$1" target="_blank" rel="noopener noreferrer" style="color: #0057ff;">$1</a>'); %>
+                <% const contentWithLineBreaks = contentWithLinks.replace(/\n/g, '<br />'); %>
+                <%= contentWithLineBreaks %>
+              </div>
+            </div>
+          <% }) %>
+        </div>
+      <% } else { %>
+        <p class="muted-small">No entries yet.</p>
+      <% } %>
+    </article>
+
+    <script>
+      const allowedExtensions = ['pdf', 'jpg', 'jpeg', 'doc', 'docx'];
+      const maxFileSize = 10 * 1024 * 1024; // 10MB in bytes
+      let isCurrentFileValid = true; // Track if current file selection is valid
+
+      function validateFile(file) {
+        if (!file) return true; // No file is always valid
+        
+        const fileName = file.name.toLowerCase();
+        const fileExtension = fileName.split('.').pop();
+        const isValidExtension = allowedExtensions.includes(fileExtension);
+        const isValidSize = file.size <= maxFileSize;
+        
+        return isValidExtension && isValidSize;
+      }
+
+      function getFileErrorMessage(file) {
+        if (!file) return '';
+        
+        const fileName = file.name.toLowerCase();
+        const fileExtension = fileName.split('.').pop();
+        const isValidExtension = allowedExtensions.includes(fileExtension);
+        const isValidSize = file.size <= maxFileSize;
+        
+        if (!isValidExtension) {
+          return `Invalid file type. You selected: .${fileExtension}`;
+        } else if (!isValidSize) {
+          return `File is too large (${(file.size / 1024 / 1024).toFixed(2)}MB).`;
+        }
+        return '';
+      }
+
+      // Main file input validation (Add entry form)
+      document.getElementById('file-input')?.addEventListener('change', function(e) {
+        const fileInput = e.target;
+        const fileError = document.getElementById('file-error');
+        const file = fileInput.files[0];
+
+        if (!file) {
+          fileError.style.display = 'none';
+          isCurrentFileValid = true;
+          return;
+        }
+
+        const isValid = validateFile(file);
+        isCurrentFileValid = isValid;
+
+        if (!isValid) {
+          fileError.style.display = 'block';
+          fileError.textContent = getFileErrorMessage(file);
+          fileInput.value = ''; // Clear the bad file
+        } else {
+          fileError.style.display = 'none';
+        }
+      });
+
+      // Form submit validation for add entry form
+      document.getElementById('add-entry-form')?.addEventListener('submit', function(e) {
+        const fileInput = document.getElementById('file-input');
+        const fileError = document.getElementById('file-error');
+        const file = fileInput.files[0];
+        
+        // If there's a file, validate it
+        if (file) {
+          const isValid = validateFile(file);
+          if (!isValid) {
+            e.preventDefault();
+            fileError.style.display = 'block';
+            fileError.textContent = getFileErrorMessage(file);
+            fileInput.value = '';
+            return false;
+          }
+        }
+        
+        // Also check our tracking flag
+        if (!isCurrentFileValid) {
+          e.preventDefault();
+          fileError.style.display = 'block';
+          return false;
+        }
+      });
+
+      // Edit forms validation
+      document.querySelectorAll('.edit-file-input')?.forEach(function(fileInput) {
+        fileInput.addEventListener('change', function(e) {
+          const form = fileInput.closest('form');
+          const fileError = form.querySelector('.edit-file-error');
+          const file = fileInput.files[0];
+
+          if (!file) {
+            fileError.style.display = 'none';
+            return;
+          }
+
+          const isValid = validateFile(file);
+
+          if (!isValid) {
+            fileError.style.display = 'block';
+            fileError.textContent = getFileErrorMessage(file);
+            fileInput.value = '';
+          } else {
+            fileError.style.display = 'none';
+          }
+        });
+
+        // Edit form submit validation
+        const form = fileInput.closest('form');
+        form.addEventListener('submit', function(e) {
+          const file = fileInput.files[0];
+          
+          if (file) {
+            const isValid = validateFile(file);
+            if (!isValid) {
+              e.preventDefault();
+              const fileError = form.querySelector('.edit-file-error');
+              fileError.style.display = 'block';
+              fileError.textContent = getFileErrorMessage(file);
+              fileInput.value = '';
+              return false;
+            }
+          }
+        });
+      });
+
+      function toggleEditForm(id) {
+        const form = document.getElementById('edit-form-' + id);
+        if (form) {
+          form.style.display = form.style.display === 'none' ? 'block' : 'none';
+        }
+      }
+
+      function removeFile(id) {
+        const removeInput = document.getElementById('remove_file_' + id);
+        if (removeInput) {
+          removeInput.value = '1'; // Mark file for removal
+          // Hide the current file display
+          const currentFileText = event.target.parentElement;
+          if (currentFileText && currentFileText.textContent.includes('Current:')) {
+            currentFileText.style.textDecoration = 'line-through';
+            currentFileText.style.opacity = '0.6';
+            event.target.textContent = 'Undo Remove';
+            event.target.onclick = function() { undoRemoveFile(id); };
+          }
+        }
+      }
+
+      function undoRemoveFile(id) {
+        const removeInput = document.getElementById('remove_file_' + id);
+        if (removeInput) {
+          removeInput.value = '0'; // Unmark file for removal
+          // Show the current file display normally
+          const currentFileText = event.target.parentElement;
+          if (currentFileText) {
+            currentFileText.style.textDecoration = 'none';
+            currentFileText.style.opacity = '1';
+            event.target.textContent = 'Remove File';
+            event.target.onclick = function() { removeFile(id); };
+          }
+        }
+      }
+    </script>
 
     <% if (canAppend) { %>
       <article class="card">
         <h2>Add a new entry</h2>
-        <form method="post" action="<%= submitAction %>" class="form-grid">
-          <label>New <%= entryLabel.toLowerCase() %> note
-            <textarea name="goal_entry" rows="4" placeholder="Add a goal, next step, or reminder from the <%= entryLabel.toLowerCase() %> side"></textarea>
+        <form method="post" action="<%= submitAction %>" enctype="multipart/form-data" class="form-grid" id="add-entry-form">
+          <label>Type
+            <select name="entry_type">
+              <option value="update">Update</option>
+              <option value="goal">Goal</option>
+              <option value="action">Action Item</option>
+              <option value="resource">Resource</option>
+            </select>
+          </label>
+          <label>Text
+            <textarea name="goal_entry" rows="4" placeholder="Add your note here. You can include links (URLs will be clickable)."></textarea>
+          </label>
+          <label>Attachment (PDF, JPG, DOC, DOCX - max 10MB)
+            <input type="file" name="file" accept=".pdf,.jpg,.jpeg,.doc,.docx" id="file-input" />
+            <small id="file-error" style="color: #a6102a; display: none; margin-top: 0.25rem; font-weight: 500;"></small>
           </label>
           <button class="btn" type="submit">Add Entry</button>
         </form>
