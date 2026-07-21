@@ -8,60 +8,70 @@
   <%- include("../partials/flash") %>
 
   <section class="card">
-    <h2>Location of Mentor</h2>
-    <form method="post" action="/mentee/profile" class="inline-form wrap">
-      <label>Location
-        <select name="location_id" required>
+    <h2>Find Mentors</h2>
+    <form method="get" action="/mentee" class="inline-form wrap" id="find-mentors-form">
+      <label>Select a location for where you need to find a mentor
+        <select name="location_id" id="location_id_select" required>
           <option value="">Select location</option>
           <% locations.forEach((location) => { %>
             <option value="<%= location.id %>" <%= profile?.location_id === location.id ? 'selected' : '' %>><%= location.name %></option>
           <% }) %>
         </select>
       </label>
-      <button class="btn" type="submit">Update Location</button>
-    </form>
-  </section>
 
-  <section class="card">
-    <h2>Find Mentors</h2>
-    <% if (!profile?.location_id) { %>
-      <p>Set your location first to find mentors.</p>
-    <% } else { %>
-      <form method="get" action="/mentee" class="inline-form wrap">
+      <div id="function-section" style="display: <%= profile?.location_id ? 'block' : 'none' %>; margin-top: 1rem;">
+        <p style="font-size: 0.9rem; color: var(--line); margin-bottom: 0.5rem;">Now select their function that you are interested in.</p>
         <label>Function
-          <select name="section_id" required>
+          <select name="section_id" id="section_id_select">
             <option value="">Select function</option>
             <% sections.forEach((section) => { %>
               <option value="<%= section.id %>" <%= selectedSectionId === section.id ? 'selected' : '' %>><%= section.name %></option>
             <% }) %>
           </select>
         </label>
-        <button class="btn" type="submit">Show Available Mentors</button>
-      </form>
+      </div>
 
-      <% if (selectedSectionId) { %>
-        <% if (availableMentors.length === 0) { %>
-          <p>No available mentors found for your location and selected function.</p>
-        <% } else { %>
-          <ul class="item-list mentors">
-            <% availableMentors.forEach((mentor) => { %>
-              <li>
-                <div>
-                  <strong><%= mentor.email %></strong>
-                  <p>Location: <%= mentor.location_name || 'N/A' %></p>
-                </div>
-                <form method="post" action="/mentee/request-mentor">
-                  <input type="hidden" name="mentor_id" value="<%= mentor.id %>" />
-                  <input type="hidden" name="section_id" value="<%= selectedSectionId %>" />
-                  <button class="btn" type="submit">Request Mentorship</button>
-                </form>
-              </li>
-            <% }) %>
-          </ul>
-        <% } %>
+      <button class="btn" type="submit" id="show-mentors-btn" style="display: <%= profile?.location_id ? 'block' : 'none' %>; margin-top: 1rem;">Show Available Mentors</button>
+    </form>
+
+    <% if (profile?.location_id && selectedSectionId) { %>
+      <% if (availableMentors.length === 0) { %>
+        <p style="margin-top: 1rem;">No available mentors found for your location and selected function.</p>
+      <% } else { %>
+        <ul class="item-list mentors" style="margin-top: 1rem;">
+          <% availableMentors.forEach((mentor) => { %>
+            <li>
+              <div>
+                <strong><%= mentor.email %></strong>
+                <p>Location: <%= mentor.location_name || 'N/A' %></p>
+              </div>
+              <form method="post" action="/mentee/request-mentor">
+                <input type="hidden" name="mentor_id" value="<%= mentor.id %>" />
+                <input type="hidden" name="section_id" value="<%= selectedSectionId %>" />
+                <button class="btn" type="submit">Request Mentorship</button>
+              </form>
+            </li>
+          <% }) %>
+        </ul>
       <% } %>
     <% } %>
   </section>
+
+  <script>
+    document.getElementById('location_id_select').addEventListener('change', function() {
+      const functionSection = document.getElementById('function-section');
+      const showMentorsBtn = document.getElementById('show-mentors-btn');
+      
+      if (this.value) {
+        functionSection.style.display = 'block';
+        showMentorsBtn.style.display = 'block';
+      } else {
+        functionSection.style.display = 'none';
+        showMentorsBtn.style.display = 'none';
+        document.getElementById('section_id_select').value = '';
+      }
+    });
+  </script>
 
   <section class="card">
     <h2>Your Mentorships</h2>
