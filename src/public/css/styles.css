@@ -305,6 +305,7 @@ button {
   border-color: #0045cc !important;
   position: relative;
   transition: all 0.2s ease;
+  overflow: visible;
 }
 
 .goal-link:hover {
@@ -326,23 +327,26 @@ button {
   font-size: 0.72em;
   line-height: 1;
   font-weight: 700;
+  overflow: visible;
+}
+
+.goal-link.has-unread-goals {
+  animation: goal-link-pulse 1.4s ease-in-out infinite;
+  filter: drop-shadow(0 0 1.5rem rgba(var(--goal-badge-rgb), 0.7));
 }
 
 .goal-link.has-unread-goals .goal-count {
-  animation: goal-badge-pulse 1.4s ease-in-out infinite;
-  box-shadow: 0 0 0.5rem rgba(var(--goal-badge-rgb), 0.8), 0 0 1.5rem rgba(var(--goal-badge-rgb), 0.4);
+  animation: none;
 }
 
-@keyframes goal-badge-pulse {
+@keyframes goal-link-pulse {
   0%,
   100% {
-    transform: scale(1);
-    box-shadow: 0 0 0.5rem rgba(var(--goal-badge-rgb), 0.8), 0 0 1.5rem rgba(var(--goal-badge-rgb), 0.2);
+    filter: drop-shadow(0 0 1.5rem rgba(var(--goal-badge-rgb), 0.7));
   }
 
   50% {
-    transform: scale(1.3);
-    box-shadow: 0 0 1rem rgba(var(--goal-badge-rgb), 1), 0 0 4rem rgba(var(--goal-badge-rgb), 0.6);
+    filter: drop-shadow(0 0 5rem rgba(var(--goal-badge-rgb), 1));
   }
 }
 
