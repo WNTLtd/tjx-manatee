@@ -60,6 +60,32 @@ const uploadLogo = multer({
   },
 });
 
+const faviconDir = path.join(__dirname, "..", "public", "uploads", "logos");
+if (!fs.existsSync(faviconDir)) {
+  fs.mkdirSync(faviconDir, { recursive: true });
+}
+
+const faviconStorage = multer.diskStorage({
+  destination: (_req, _file, cb) => cb(null, faviconDir),
+  filename: (_req, file, cb) => {
+    const ext = path.extname(file.originalname || "").toLowerCase();
+    const safeExt = [".png", ".ico", ".svg"].includes(ext) ? ext : ".png";
+    cb(null, `favicon-${Date.now()}${safeExt}`);
+  },
+});
+
+const uploadFavicon = multer({
+  storage: faviconStorage,
+  limits: { fileSize: 1 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    const allowedMimes = ["image/png", "image/x-icon", "image/svg+xml"];
+    const allowedExts = [".png", ".ico", ".svg"];
+    const ext = path.extname(file.originalname || "").toLowerCase();
+    if (allowedMimes.includes(file.mimetype) || allowedExts.includes(ext)) return cb(null, true);
+    return cb(new Error("Only PNG, ICO, or SVG files are allowed for favicon upload."));
+  },
+});
+
 const uploadCsv = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 2 * 1024 * 1024 },
@@ -361,6 +387,34 @@ router.post("/theme/logo", (req, res) => {
     }
 
     setFlash(req, "success", "Company logo updated.");
+    return res.redirect("/admin/theme");
+  });
+});
+
+router.post("/theme/favicon", (req, res) => {
+  uploadFavicon.single("favicon")(req, res, (err) => {
+    if (err) {
+      setFlash(req, "error", String(err.message || err));
+      return res.redirect("/admin/theme");
+    }
+
+    if (!req.file) {
+      setFlash(req, "error", "Please choose a favicon file to upload.");
+      return res.redirect("/admin/theme");
+    }
+
+    const previous = getThemeSettings();
+    const faviconPath = `/uploads/logos/${req.file.filename}`;
+    db.prepare("UPDATE site_settings SET favicon_path = ? WHERE id = 1").run(faviconPath);
+
+    if (previous?.favicon_path && previous.favicon_path.startsWith("/uploads/logos/")) {
+      const previousFile = path.join(__dirname, "..", "public", previous.favicon_path.replace(/^\//, ""));
+      if (previousFile !== req.file.path && fs.existsSync(previousFile)) {
+        fs.unlink(previousFile, () => {});
+      }
+    }
+
+    setFlash(req, "success", "Favicon updated.");
     return res.redirect("/admin/theme");
   });
 });

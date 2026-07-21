@@ -101,5 +101,21 @@
       <button class="btn" type="submit">Upload Company Logo</button>
     </form>
   </section>
+
+  <section class="card">
+    <h2>Favicon</h2>
+    <p class="hint">Upload a PNG, ICO, or SVG file (max 1MB). This will appear in browser tabs.</p>
+    <% if (theme.favicon_path) { %>
+      <div class="theme-favicon-preview">
+        <img src="<%= theme.favicon_path %>" alt="Current favicon" style="width: 64px; height: 64px; border: 1px solid #ddd; padding: 4px;" />
+      </div>
+    <% } else { %>
+      <p class="hint">No favicon uploaded yet.</p>
+    <% } %>
+    <form method="post" action="/admin/theme/favicon" enctype="multipart/form-data" class="inline-form wrap" autocomplete="off">
+      <input type="file" name="favicon" accept=".png,.ico,.svg,image/png,image/x-icon,image/svg+xml" required />
+      <button class="btn" type="submit">Upload Favicon</button>
+    </form>
+  </section>
 </main>
 <%- include("../partials/footer") %>

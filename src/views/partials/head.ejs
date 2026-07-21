@@ -41,5 +41,8 @@
       </style>
     <% } %>
     <link rel="stylesheet" href="/css/styles.css" />
+    <% if (theme?.favicon_path) { %>
+      <link rel="icon" href="<%= theme.favicon_path %>" />
+    <% } %>
   </head>
   <body>

@@ -270,6 +270,10 @@ function ensureSiteSettingsTable() {
     db.prepare("ALTER TABLE site_settings ADD COLUMN logo_path TEXT").run();
   }
 
+  if (!names.has("favicon_path")) {
+    db.prepare("ALTER TABLE site_settings ADD COLUMN favicon_path TEXT").run();
+  }
+
   const existing = db.prepare("SELECT id FROM site_settings WHERE id = 1").get();
   if (!existing) {
     db.prepare(
