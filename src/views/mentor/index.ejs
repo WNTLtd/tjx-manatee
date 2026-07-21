@@ -93,7 +93,7 @@
       <table>
         <thead>
           <tr>
-            <th>Mentee</th><th>Function</th><th>Status</th><th>End Reason</th><th>Action</th>
+            <th>Mentee</th><th>Function</th><th>Status</th><th>Action</th>
           </tr>
         </thead>
         <tbody>
@@ -102,7 +102,6 @@
               <td><%= item.mentee_email %></td>
               <td><%= item.section_name || 'N/A' %></td>
               <td><%= item.status %></td>
-              <td><%= item.end_reason_name || '-' %></td>
               <td>
                 <div class="inline-form">
                   <a class="btn compact goal-link <%= item.goalUnreadCount > 0 ? 'has-unread-goals' : '' %>" href="/mentor/mentorship/<%= item.id %>/goals" aria-label="Open updates <%= item.goalUnreadCount > 0 ? `(${item.goalUnreadCount} unread)` : '' %>">
@@ -121,6 +120,8 @@
                     </select>
                     <button class="btn warning" type="submit">End</button>
                   </form>
+                <% } else if (item.status === 'ended') { %>
+                  <span><%= item.end_reason_name || '-' %></span>
                 <% } else { %>
                   <span>-</span>
                 <% } %>
