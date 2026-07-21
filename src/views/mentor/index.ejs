@@ -104,7 +104,7 @@
               <td><%= item.status %></td>
               <td><%= item.end_reason_name || '-' %></td>
               <td>
-                <div class="inline-form wrap">
+                <div class="inline-form">
                   <a class="btn compact goal-link <%= item.goalUnreadCount > 0 ? 'has-unread-goals' : '' %>" href="/mentor/mentorship/<%= item.id %>/goals" aria-label="Open updates <%= item.goalUnreadCount > 0 ? `(${item.goalUnreadCount} unread)` : '' %>">
                     Updates
                     <% if (item.goalUnreadCount > 0) { %>
@@ -112,7 +112,7 @@
                     <% } %>
                   </a>
                 <% if (item.status === 'accepted') { %>
-                  <form method="post" action="/mentor/mentorship/<%= item.id %>/end" class="inline-form wrap">
+                  <form method="post" action="/mentor/mentorship/<%= item.id %>/end" class="inline-form">
                     <select name="end_reason_id" required>
                       <option value="">Live - Ended reason</option>
                       <% endReasons.forEach((reason) => { %>
