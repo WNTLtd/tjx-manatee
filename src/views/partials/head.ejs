@@ -30,6 +30,13 @@
           --flash-error-text: <%= theme.flash_error_text_color %>;
           --danger-soft: <%= theme.danger_soft_color %>;
           --goal-badge: <%= theme.goal_badge_color %>;
+          <%
+            const hexToRgb = (hex) => {
+              const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+              return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : '200, 16, 46';
+            };
+          %>
+          --goal-badge-rgb: <%= hexToRgb(theme.goal_badge_color) %>;
         }
       </style>
     <% } %>

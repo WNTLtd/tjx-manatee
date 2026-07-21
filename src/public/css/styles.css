@@ -330,18 +330,19 @@ button {
 
 .goal-link.has-unread-goals .goal-count {
   animation: goal-badge-pulse 1.4s ease-in-out infinite;
+  box-shadow: 0 0 0.3rem rgba(var(--goal-badge-rgb), 0.6);
 }
 
 @keyframes goal-badge-pulse {
   0%,
   100% {
     transform: scale(1);
-    filter: drop-shadow(0 0 0.2rem var(--goal-badge));
+    box-shadow: 0 0 0.3rem rgba(var(--goal-badge-rgb), 0.6);
   }
 
   50% {
     transform: scale(1.25);
-    filter: drop-shadow(0 0 0.8rem var(--goal-badge));
+    box-shadow: 0 0 1.2rem rgba(var(--goal-badge-rgb), 0.8);
   }
 }
 
