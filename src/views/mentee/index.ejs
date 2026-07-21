@@ -9,19 +9,18 @@
 
   <section class="card">
     <h2>Find Mentors</h2>
-    <form method="get" action="/mentee" class="inline-form wrap" id="find-mentors-form">
-      <label>Select a location for where you need to find a mentor
+    <form method="get" action="/mentee" id="find-mentors-form">
+      <label style="display: block; width: 100%; margin-bottom: 1rem;">Select a location for where you need to find a mentor
         <select name="location_id" id="location_id_select" required>
           <option value="">Select location</option>
           <% locations.forEach((location) => { %>
-            <option value="<%= location.id %>" <%= profile?.location_id === location.id ? 'selected' : '' %>><%= location.name %></option>
+            <option value="<%= location.id %>"><%= location.name %></option>
           <% }) %>
         </select>
       </label>
 
-      <div id="function-section" style="display: <%= profile?.location_id ? 'block' : 'none' %>; margin-top: 1rem;">
-        <p style="font-size: 0.9rem; color: var(--line); margin-bottom: 0.5rem;">Now select their function that you are interested in.</p>
-        <label>Function
+      <div id="function-section" style="display: none; margin-top: 1rem; margin-bottom: 1rem;">
+        <label style="display: block; width: 100%; margin-bottom: 1rem;">Now select their function that you are interested in.
           <select name="section_id" id="section_id_select">
             <option value="">Select function</option>
             <% sections.forEach((section) => { %>
@@ -30,20 +29,26 @@
           </select>
         </label>
       </div>
-
-      <button class="btn" type="submit" id="show-mentors-btn" style="display: <%= profile?.location_id ? 'block' : 'none' %>; margin-top: 1rem;">Show Available Mentors</button>
     </form>
 
     <% if (profile?.location_id && selectedSectionId) { %>
       <% if (availableMentors.length === 0) { %>
         <p style="margin-top: 1rem;">No available mentors found for your location and selected function.</p>
       <% } else { %>
-        <ul class="item-list mentors" style="margin-top: 1rem;">
+        <h3 style="margin-top: 1rem; margin-bottom: 1rem;">Mentors Found (<%= availableMentors.length %>)</h3>
+        <ul class="item-list mentors">
           <% availableMentors.forEach((mentor) => { %>
             <li>
               <div>
-                <strong><%= mentor.email %></strong>
-                <p>Location: <%= mentor.location_name || 'N/A' %></p>
+                <strong><% if (mentor.title || mentor.first_name || mentor.surname) { %>
+                  <%= [mentor.title, mentor.first_name, mentor.surname].filter(Boolean).join(' ') %>
+                <% } else { %>
+                  <%= mentor.email %>
+                <% } %></strong>
+                <% if (mentor.title || mentor.first_name || mentor.surname) { %>
+                  <p style="margin: 0.2rem 0;"><%= mentor.email %></p>
+                <% } %>
+                <p style="margin: 0.2rem 0;">Location: <%= mentor.location_name || 'N/A' %></p>
               </div>
               <form method="post" action="/mentee/request-mentor">
                 <input type="hidden" name="mentor_id" value="<%= mentor.id %>" />
@@ -58,17 +63,35 @@
   </section>
 
   <script>
-    document.getElementById('location_id_select').addEventListener('change', function() {
+    // Initialize visibility on page load
+    function updateMentorFormVisibility() {
+      const locationSelect = document.getElementById('location_id_select');
+      const functionSelect = document.getElementById('section_id_select');
       const functionSection = document.getElementById('function-section');
-      const showMentorsBtn = document.getElementById('show-mentors-btn');
+      const form = document.getElementById('find-mentors-form');
       
-      if (this.value) {
+      if (locationSelect.value) {
         functionSection.style.display = 'block';
-        showMentorsBtn.style.display = 'block';
       } else {
         functionSection.style.display = 'none';
-        showMentorsBtn.style.display = 'none';
-        document.getElementById('section_id_select').value = '';
+        functionSelect.value = '';
+      }
+    }
+
+    // Update on page load
+    updateMentorFormVisibility();
+
+    // Update on location change
+    document.getElementById('location_id_select').addEventListener('change', function() {
+      updateMentorFormVisibility();
+      // Clear function selection when location changes
+      document.getElementById('section_id_select').value = '';
+    });
+    
+    // Auto-submit form when function is selected
+    document.getElementById('section_id_select').addEventListener('change', function() {
+      if (this.value) {
+        document.getElementById('find-mentors-form').submit();
       }
     });
   </script>

@@ -252,7 +252,7 @@ router.get("/mentorship/:id/goals", (req, res) => {
        FROM goal_entries ge
        JOIN users u ON u.id = ge.user_id
        WHERE ge.mentorship_id = ?
-       ORDER BY ge.created_at ASC`
+       ORDER BY ge.created_at DESC`
     )
     .all(mentorshipId);
 

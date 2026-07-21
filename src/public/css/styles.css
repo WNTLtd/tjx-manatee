@@ -23,6 +23,7 @@
   --danger-soft: #f3c9cf;
   --alt-bg-1: #ffffff;
   --alt-bg-2: #f0f0f0;
+  --goal-badge: #c8102e;
   --radius: 14px;
 }
 
@@ -329,19 +330,19 @@ button {
 
 .goal-link.has-unread-goals .goal-count {
   animation: goal-badge-pulse 1.4s ease-in-out infinite;
-  box-shadow: 0 0 0 0 color-mix(in srgb, var(--goal-badge) 60%, transparent);
+  box-shadow: 0 0 0 0 rgba(200, 16, 46, 0.6);
 }
 
 @keyframes goal-badge-pulse {
   0%,
   100% {
     transform: scale(1);
-    box-shadow: 0 0 0 0 color-mix(in srgb, var(--goal-badge) 60%, transparent);
+    box-shadow: 0 0 0 0 rgba(200, 16, 46, 0.7);
   }
 
   50% {
-    transform: scale(1.08);
-    box-shadow: 0 0 0 0.35rem color-mix(in srgb, var(--goal-badge) 30%, transparent);
+    transform: scale(1.25);
+    box-shadow: 0 0 0 0.6rem rgba(200, 16, 46, 0.2);
   }
 }
 

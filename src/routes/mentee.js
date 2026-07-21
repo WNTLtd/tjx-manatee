@@ -122,7 +122,7 @@ router.get("/", (req, res) => {
   if (profile?.location_id && selectedSectionId) {
     availableMentors = db
       .prepare(
-        `SELECT u.id, u.email, l.name AS location_name
+        `SELECT u.id, u.email, u.title, u.first_name, u.surname, l.name AS location_name
          FROM users u
          JOIN mentor_profiles mp ON mp.user_id = u.id
          JOIN mentor_sections ms ON ms.mentor_id = u.id
@@ -131,7 +131,7 @@ router.get("/", (req, res) => {
            AND mp.available=1
            AND mp.location_id = ?
            AND ms.section_id = ?
-         ORDER BY u.email`
+         ORDER BY u.id DESC`
       )
       .all(profile.location_id, selectedSectionId);
   }
@@ -210,7 +210,7 @@ router.get("/mentorship/:id/goals", (req, res) => {
        FROM goal_entries ge
        JOIN users u ON u.id = ge.user_id
        WHERE ge.mentorship_id = ?
-       ORDER BY ge.created_at ASC`
+       ORDER BY ge.created_at DESC`
     )
     .all(mentorshipId);
 
