@@ -452,6 +452,12 @@ textarea {
   flex-wrap: nowrap;
 }
 
+.inline-form select,
+.inline-form input {
+  min-width: 140px;
+  flex-shrink: 0;
+}
+
 .inline-form.wrap {
   flex-wrap: wrap;
 }
@@ -570,7 +576,7 @@ td {
   border-bottom: 1px solid var(--line);
   padding: 0.45rem;
   text-align: left;
-  vertical-align: top;
+  vertical-align: middle;
 }
 
 .sort-head {
