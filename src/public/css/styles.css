@@ -331,22 +331,130 @@ button {
 }
 
 .goal-link.has-unread-goals {
-  animation: goal-link-pulse 1.4s ease-in-out infinite;
-  filter: drop-shadow(0 0 1.5rem rgba(var(--goal-badge-rgb), 0.7));
+  position: relative;
+  border: 2px solid #c8102e;
+  border-radius: 4px;
+  background: #c8102e;
+  box-shadow: 
+    3px 0 0 -1px #0057ff,
+    0 3px 0 -1px transparent,
+    -3px 0 0 -1px transparent,
+    0 -3px 0 -1px transparent;
+  animation: rotate-glow 2s linear infinite;
+}
+
+.goal-link.has-unread-goals::before {
+  display: none;
+}
+
+.goal-link.has-unread-goals {
+  z-index: 1;
 }
 
 .goal-link.has-unread-goals .goal-count {
-  animation: none;
+  position: relative;
+  z-index: 2;
 }
 
-@keyframes goal-link-pulse {
-  0%,
-  100% {
-    filter: drop-shadow(0 0 1.5rem rgba(var(--goal-badge-rgb), 0.7));
+@keyframes rotate-glow {
+  0% {
+    box-shadow: 
+      3px 0 0 -1px #0057ff,
+      2.1px 2.1px 0 -1px transparent,
+      0 3px 0 -1px transparent,
+      -2.1px 2.1px 0 -1px transparent,
+      -3px 0 0 -1px transparent,
+      -2.1px -2.1px 0 -1px transparent,
+      0 -3px 0 -1px transparent,
+      2.1px -2.1px 0 -1px transparent;
   }
-
+  12.5% {
+    box-shadow: 
+      2.1px 2.1px 0 -1px #0057ff,
+      0 3px 0 -1px transparent,
+      -2.1px 2.1px 0 -1px transparent,
+      -3px 0 0 -1px transparent,
+      -2.1px -2.1px 0 -1px transparent,
+      0 -3px 0 -1px transparent,
+      2.1px -2.1px 0 -1px transparent,
+      3px 0 0 -1px transparent;
+  }
+  25% {
+    box-shadow: 
+      0 3px 0 -1px #0057ff,
+      -2.1px 2.1px 0 -1px transparent,
+      -3px 0 0 -1px transparent,
+      -2.1px -2.1px 0 -1px transparent,
+      0 -3px 0 -1px transparent,
+      2.1px -2.1px 0 -1px transparent,
+      3px 0 0 -1px transparent,
+      2.1px 2.1px 0 -1px transparent;
+  }
+  37.5% {
+    box-shadow: 
+      -2.1px 2.1px 0 -1px #0057ff,
+      -3px 0 0 -1px transparent,
+      -2.1px -2.1px 0 -1px transparent,
+      0 -3px 0 -1px transparent,
+      2.1px -2.1px 0 -1px transparent,
+      3px 0 0 -1px transparent,
+      2.1px 2.1px 0 -1px transparent,
+      0 3px 0 -1px transparent;
+  }
   50% {
-    filter: drop-shadow(0 0 5rem rgba(var(--goal-badge-rgb), 1));
+    box-shadow: 
+      -3px 0 0 -1px #0057ff,
+      -2.1px -2.1px 0 -1px transparent,
+      0 -3px 0 -1px transparent,
+      2.1px -2.1px 0 -1px transparent,
+      3px 0 0 -1px transparent,
+      2.1px 2.1px 0 -1px transparent,
+      0 3px 0 -1px transparent,
+      -2.1px 2.1px 0 -1px transparent;
+  }
+  62.5% {
+    box-shadow: 
+      -2.1px -2.1px 0 -1px #0057ff,
+      0 -3px 0 -1px transparent,
+      2.1px -2.1px 0 -1px transparent,
+      3px 0 0 -1px transparent,
+      2.1px 2.1px 0 -1px transparent,
+      0 3px 0 -1px transparent,
+      -2.1px 2.1px 0 -1px transparent,
+      -3px 0 0 -1px transparent;
+  }
+  75% {
+    box-shadow: 
+      0 -3px 0 -1px #0057ff,
+      2.1px -2.1px 0 -1px transparent,
+      3px 0 0 -1px transparent,
+      2.1px 2.1px 0 -1px transparent,
+      0 3px 0 -1px transparent,
+      -2.1px 2.1px 0 -1px transparent,
+      -3px 0 0 -1px transparent,
+      -2.1px -2.1px 0 -1px transparent;
+  }
+  87.5% {
+    box-shadow: 
+      2.1px -2.1px 0 -1px #0057ff,
+      3px 0 0 -1px transparent,
+      2.1px 2.1px 0 -1px transparent,
+      0 3px 0 -1px transparent,
+      -2.1px 2.1px 0 -1px transparent,
+      -3px 0 0 -1px transparent,
+      -2.1px -2.1px 0 -1px transparent,
+      0 -3px 0 -1px transparent;
+  }
+  100% {
+    box-shadow: 
+      3px 0 0 -1px #0057ff,
+      2.1px 2.1px 0 -1px transparent,
+      0 3px 0 -1px transparent,
+      -2.1px 2.1px 0 -1px transparent,
+      -3px 0 0 -1px transparent,
+      -2.1px -2.1px 0 -1px transparent,
+      0 -3px 0 -1px transparent,
+      2.1px -2.1px 0 -1px transparent;
   }
 }
 

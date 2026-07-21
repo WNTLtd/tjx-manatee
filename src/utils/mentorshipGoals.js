@@ -23,8 +23,40 @@ function countMentorshipGoalEntries(goalLog) {
   return parseMentorshipGoalLog(goalLog).length;
 }
 
-function getMentorshipUnreadGoalCount(mentorship, userId) {
-  const totalEntries = countMentorshipGoalEntries(mentorship?.goals_log);
+function getMentorshipUnreadGoalCount(mentorship, userId, db = null) {
+  // If no database provided, use the old logic (for backward compatibility)
+  if (!db) {
+    const totalEntries = countMentorshipGoalEntries(mentorship?.goals_log);
+    const seenCount = Number(
+      userId === mentorship?.mentor_id
+        ? mentorship?.mentor_goals_seen_count
+        : userId === mentorship?.mentee_id
+          ? mentorship?.mentee_goals_seen_count
+          : 0
+    ) || 0;
+
+    return Math.max(totalEntries - seenCount, 0);
+  }
+
+  // Count entries from the OTHER user (not the current user)
+  const otherUserId = userId === mentorship?.mentor_id
+    ? mentorship?.mentee_id
+    : userId === mentorship?.mentee_id
+      ? mentorship?.mentor_id
+      : null;
+
+  if (!otherUserId) return 0;
+
+  // Count entries created by the OTHER user
+  const entriesFromOtherUser = db
+    .prepare(
+      `SELECT COUNT(*) as count FROM goal_entries 
+       WHERE mentorship_id = ? AND user_id = ?`
+    )
+    .get(mentorship?.id, otherUserId);
+
+  const totalEntriesFromOther = entriesFromOtherUser?.count || 0;
+  
   const seenCount = Number(
     userId === mentorship?.mentor_id
       ? mentorship?.mentor_goals_seen_count
@@ -33,7 +65,7 @@ function getMentorshipUnreadGoalCount(mentorship, userId) {
         : 0
   ) || 0;
 
-  return Math.max(totalEntries - seenCount, 0);
+  return Math.max(totalEntriesFromOther - seenCount, 0);
 }
 
 module.exports = {

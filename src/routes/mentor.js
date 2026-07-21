@@ -193,7 +193,7 @@ router.get("/", (req, res) => {
 
   const mentorshipsWithGoalCounts = mentorships.map((mentorship) => ({
     ...mentorship,
-    goalUnreadCount: getMentorshipUnreadGoalCount(mentorship, req.currentUser.id),
+    goalUnreadCount: getMentorshipUnreadGoalCount(mentorship, req.currentUser.id, db),
   }));
 
   res.render("mentor/index", {
@@ -243,6 +243,20 @@ router.get("/mentorship/:id/goals", (req, res) => {
     setFlash(req, "error", "Mentorship not found.");
     return res.redirect("/mentor");
   }
+
+  // Mark all MENTEE entries as seen
+  const menteeEntries = db
+    .prepare(
+      `SELECT COUNT(*) as count FROM goal_entries 
+       WHERE mentorship_id = ? AND user_id = ?`
+    )
+    .get(mentorshipId, mentorship.mentee_id);
+  
+  const menteeEntryCount = menteeEntries?.count || 0;
+  db.prepare("UPDATE mentorships SET mentor_goals_seen_count = ? WHERE id = ?").run(
+    menteeEntryCount,
+    mentorshipId
+  );
 
   // Fetch goal entries from new table
   const entries = db
