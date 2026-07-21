@@ -3,7 +3,7 @@ const bcrypt = require("bcryptjs");
 const { db } = require("../db");
 const { requireAuth, setFlash } = require("../middleware/auth");
 const { generateResetToken } = require("../utils/password");
-const { sendSystemEmail } = require("../utils/mailer");
+const { sendSystemEmail, getAppBaseUrl } = require("../utils/mailer");
 const { buildTwoFactorOtpAuthUrl, buildTwoFactorQrDataUrl, generateTwoFactorSecret, verifyTwoFactorToken } = require("../utils/twoFactor");
 
 const router = express.Router();
@@ -117,7 +117,7 @@ router.post("/email", async (req, res) => {
      VALUES (?, ?, ?, ?, ?)`
   ).run(req.currentUser.id, currentUser.email, email, token, expiresAt);
 
-  const base = process.env.BASE_URL || "http://localhost:3000";
+  const base = getAppBaseUrl();
   const recoverLink = `${base}/recover-email-change/${token}`;
   const expireText = "72 hours";
 

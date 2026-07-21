@@ -1,7 +1,7 @@
 const express = require("express");
 const { db } = require("../db");
 const { requireRole, setFlash } = require("../middleware/auth");
-const { sendSystemEmail } = require("../utils/mailer");
+const { sendSystemEmail, getAppBaseUrl } = require("../utils/mailer");
 const { escapeHtml } = require("../utils/html");
 const { buildMentorshipGoalEntry, appendMentorshipGoalLog, getMentorshipUnreadGoalCount, parseMentorshipGoalLog } = require("../utils/mentorshipGoals");
 const { upload, deleteUploadedFile, getStoragePath } = require("../utils/fileUpload");
@@ -294,7 +294,7 @@ router.post("/request-mentor", async (req, res) => {
     .run(mentorId, req.currentUser.id, sectionId);
 
   const section = db.prepare("SELECT name FROM sections WHERE id = ?").get(sectionId);
-  const base = process.env.BASE_URL || "http://localhost:3000";
+  const base = getAppBaseUrl();
   const actionLink = `${base}/mentor`;
 
   try {
@@ -331,7 +331,7 @@ router.post("/mentorship/:id/resend", async (req, res) => {
     return res.redirect("/mentee");
   }
 
-  const base = process.env.BASE_URL || "http://localhost:3000";
+  const base = getAppBaseUrl();
   const actionLink = `${base}/mentor`;
   try {
     await sendSystemEmail({

@@ -126,8 +126,9 @@
           <li><strong>Logo Upload:</strong> Upload your organization's logo (PNG or JPG, recommended size 200×50px or larger)</li>
         </ul>
         <h3>SMTP and Email Configuration</h3>
-        <p>Configure outbound email in <strong>SMTP Settings</strong>:</p>
+        <p>Configure outbound email in <strong>Settings</strong>:</p>
         <ul>
+          <li><strong>Web Hosted URL:</strong> The public URL for your deployed Manatee site (used in all email links)</li>
           <li><strong>SMTP Host:</strong> Your mail server address (e.g., smtp.gmail.com, smtp.office365.com)</li>
           <li><strong>SMTP Port:</strong> Port number (typically 25, 587, or 465)</li>
           <li><strong>Secure Mode:</strong> Enable TLS or SSL as required by your mail server</li>
@@ -135,7 +136,7 @@
           <li><strong>From Email:</strong> The sender email address that appears in all outbound messages</li>
           <li><strong>BCC Logging Email (optional):</strong> A copy of every email sent will be BCC'd to this address for audit/compliance</li>
         </ul>
-        <p>After entering SMTP settings, click <strong>Test Settings</strong> to verify that the server accepts your configuration. A test email will be sent to the "From Email" address.</p>
+        <p>After entering SMTP settings, click <strong>Test Settings</strong> to verify that the server accepts your configuration. A test email will be sent to the test recipient address entered in the form.</p>
       </section>
 
       <section class="card">
@@ -175,7 +176,7 @@
         <h2>Troubleshooting</h2>
         <h3>Emails Not Sending</h3>
         <ul>
-          <li>Check SMTP settings in Theme Settings → SMTP Configuration</li>
+          <li>Check SMTP settings in Admin Dashboard → Settings</li>
           <li>Click "Test Settings" to verify the connection</li>
           <li>Review the Audit Log for error messages</li>
           <li>Verify that the "From Email" is allowed by your SMTP provider</li>

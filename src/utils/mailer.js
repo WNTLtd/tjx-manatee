@@ -5,10 +5,34 @@ function getSmtpSettings() {
   return db.prepare("SELECT * FROM smtp_settings WHERE id = 1").get();
 }
 
+function normalizeBaseUrl(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+
+  const withProtocol = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
+  try {
+    const parsed = new URL(withProtocol);
+    return parsed.origin.replace(/\/$/, "");
+  } catch {
+    return "";
+  }
+}
+
+function getAppBaseUrl() {
+  const settings = getSmtpSettings() || {};
+  const fromSettings = normalizeBaseUrl(settings.base_url);
+  if (fromSettings) return fromSettings;
+
+  const fromEnv = normalizeBaseUrl(process.env.BASE_URL);
+  if (fromEnv) return fromEnv;
+
+  return "http://localhost:3000";
+}
+
 function getConfiguredFromEmail(settings) {
   const from = String(settings?.from_email || "").trim();
   if (!from) {
-    throw new Error("From Email must be configured in Admin SMTP settings.");
+    throw new Error("From Email must be configured in Admin Settings.");
   }
   return from;
 }
@@ -166,6 +190,7 @@ async function sendSystemEmail({ to, subject, html, text, bccOverride, eventType
 
 module.exports = {
   sendSystemEmail,
+  getAppBaseUrl,
   getSmtpSettings,
   verifySmtpSettings,
   testSmtpDelivery,

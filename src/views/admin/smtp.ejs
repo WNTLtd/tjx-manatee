@@ -1,8 +1,8 @@
-<%- include("../partials/head", { title: "SMTP Settings" }) %>
+<%- include("../partials/head", { title: "Settings" }) %>
 <%- include("../partials/header") %>
 <main class="container">
   <div class="inline-form wrap page-head-row">
-    <h1>SMTP Settings</h1>
+    <h1>Settings</h1>
     <div class="inline-form wrap">
       <a class="btn ghost" href="/admin">Back to Dashboard</a>
     </div>
@@ -10,8 +10,19 @@
   <%- include("../partials/flash") %>
 
   <section class="card">
+    <h2>Web Hosted URL</h2>
+    <p class="hint">Used in all outbound email links. Example: https://manatee.company.com</p>
+    <form method="post" action="/admin/settings/web-url" class="form-grid" autocomplete="off">
+      <label>Hosted URL
+        <input name="base_url" value="<%= smtp?.base_url || '' %>" placeholder="https://manatee.example.com" required autocomplete="off" />
+      </label>
+      <button class="btn" type="submit">Save Hosted URL</button>
+    </form>
+  </section>
+
+  <section class="card">
     <h2>SMTP and Email Logging</h2>
-    <form method="post" action="/admin/smtp" class="form-grid" autocomplete="off" data-lpignore="true" data-1p-ignore="true">
+    <form method="post" action="/admin/settings/smtp" class="form-grid" autocomplete="off" data-lpignore="true" data-1p-ignore="true">
       <label>SMTP Host <input name="host" value="<%= smtp?.host || '' %>" autocomplete="off" /></label>
       <label>SMTP Port <input name="port" type="number" value="<%= smtp?.port || '' %>" autocomplete="off" /></label>
       <label>SMTP User <input name="smtp_user" value="<%= smtp?.user || '' %>" autocomplete="off" data-lpignore="true" data-1p-ignore="true" /></label>
@@ -29,7 +40,7 @@
 
     <hr />
 
-    <form method="post" action="/admin/smtp/test" class="form-grid" autocomplete="off">
+    <form method="post" action="/admin/settings/smtp/test" class="form-grid" autocomplete="off">
       <label>Test Recipient Email
         <input type="email" name="test_to" value="<%= currentUser?.email || '' %>" required autocomplete="off" />
       </label>

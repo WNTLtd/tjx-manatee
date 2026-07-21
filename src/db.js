@@ -144,7 +144,8 @@ function initializeDatabase() {
       user TEXT,
       pass TEXT,
       from_email TEXT,
-      bcc_email TEXT
+      bcc_email TEXT,
+      base_url TEXT
     );
 
     CREATE TABLE IF NOT EXISTS password_resets (
@@ -222,7 +223,17 @@ function initializeDatabase() {
   ).run();
 
   db.prepare("INSERT OR IGNORE INTO smtp_settings (id, secure) VALUES (1, 0)").run();
+  ensureSmtpSettingsTable();
   ensureSiteSettingsTable();
+}
+
+function ensureSmtpSettingsTable() {
+  const columns = db.prepare("PRAGMA table_info(smtp_settings)").all();
+  const names = new Set(columns.map((col) => col.name));
+
+  if (!names.has("base_url")) {
+    db.prepare("ALTER TABLE smtp_settings ADD COLUMN base_url TEXT").run();
+  }
 }
 
 function ensureSiteSettingsTable() {

@@ -6,7 +6,7 @@ const bcrypt = require("bcryptjs");
 const { db } = require("../db");
 const { requireRole, setFlash } = require("../middleware/auth");
 const { generateResetToken } = require("../utils/password");
-const { sendSystemEmail, testSmtpDelivery } = require("../utils/mailer");
+const { sendSystemEmail, testSmtpDelivery, getAppBaseUrl } = require("../utils/mailer");
 
 const router = express.Router();
 router.use(requireRole("admin"));
@@ -327,14 +327,16 @@ router.get("/", (req, res) => {
   });
 });
 
-router.get("/smtp", (req, res) => {
+router.get("/settings", (req, res) => {
   const smtp = db.prepare("SELECT * FROM smtp_settings WHERE id=1").get();
 
   return res.render("admin/smtp", {
-    title: "SMTP Settings",
+    title: "Settings",
     smtp,
   });
 });
+
+router.get("/smtp", (_req, res) => res.redirect("/admin/settings"));
 
 router.get("/theme", (req, res) => {
   const theme = getThemeSettings();
@@ -725,7 +727,7 @@ router.post("/requests/:id/resend", async (req, res) => {
     return res.redirect("/admin/requests");
   }
 
-  const base = process.env.BASE_URL || "http://localhost:3000";
+  const base = getAppBaseUrl();
   const actionLink = `${base}/mentor`;
 
   try {
@@ -852,7 +854,7 @@ router.post("/users/admin", async (req, res) => {
   const hash = bcrypt.hashSync(password, 10);
   db.prepare("INSERT INTO users (role, is_superadmin, email, password_hash) VALUES ('admin', 0, ?, ?)").run(email, hash);
 
-  const base = process.env.BASE_URL || "http://localhost:3000";
+  const base = getAppBaseUrl();
   const loginLink = `${base}/login`;
   try {
     await sendSystemEmail({
@@ -890,7 +892,7 @@ router.post("/users/:id/resend-welcome", async (req, res) => {
     return res.redirect("/admin/users");
   }
 
-  const base = process.env.BASE_URL || "http://localhost:3000";
+  const base = getAppBaseUrl();
   const loginLink = `${base}/login`;
   const displayRole = Number(user.is_superadmin) === 1 ? "superuser admin" : user.role;
 
@@ -938,7 +940,7 @@ router.post("/users/:id/reset-password", async (req, res) => {
   const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString();
   db.prepare("INSERT INTO password_resets (user_id, token, expires_at) VALUES (?, ?, ?)").run(user.id, token, expiresAt);
 
-  const base = process.env.BASE_URL || "http://localhost:3000";
+  const base = getAppBaseUrl();
   const resetLink = `${base}/reset-password/${token}`;
   const displayRole = Number(user.is_superadmin) === 1 ? "superuser admin" : user.role;
 
@@ -1436,14 +1438,14 @@ router.post("/end-reasons/bulk-delete", (req, res) => {
   return res.redirect("/admin");
 });
 
-router.post("/smtp", (req, res) => {
+router.post("/settings/smtp", (req, res) => {
   const smtpUser = String(req.body.smtp_user || req.body.user || "").trim() || null;
   const smtpPassword = String(req.body.smtp_password || req.body.pass || "").trim() || null;
   const fromEmail = String(req.body.from_email || "").trim() || null;
 
   if (!fromEmail) {
     setFlash(req, "error", "From Email is required.");
-    return res.redirect("/admin/smtp");
+    return res.redirect("/admin/settings");
   }
 
   const payload = {
@@ -1464,10 +1466,28 @@ router.post("/smtp", (req, res) => {
   ).run(payload);
 
   setFlash(req, "success", "SMTP settings updated.");
-  return res.redirect("/admin/smtp");
+  return res.redirect("/admin/settings");
 });
 
-router.post("/smtp/test", async (req, res) => {
+router.post("/settings/web-url", (req, res) => {
+  const raw = String(req.body.base_url || "").trim();
+  const withProtocol = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
+
+  let normalized;
+  try {
+    const parsed = new URL(withProtocol);
+    normalized = parsed.origin.replace(/\/$/, "");
+  } catch {
+    setFlash(req, "error", "Invalid hosted URL. Example: https://manatee.example.com");
+    return res.redirect("/admin/settings");
+  }
+
+  db.prepare("UPDATE smtp_settings SET base_url = ? WHERE id = 1").run(normalized);
+  setFlash(req, "success", "Hosted URL updated.");
+  return res.redirect("/admin/settings");
+});
+
+router.post("/settings/smtp/test", async (req, res) => {
   const testTo = String(req.body.test_to || "").trim() || req.currentUser.email;
 
   try {
@@ -1480,7 +1500,7 @@ router.post("/smtp/test", async (req, res) => {
       ).run(testTo, testResult.message, req.currentUser.id);
 
       setFlash(req, "error", `SMTP test failed: ${testResult.message}`);
-      return res.redirect("/admin/smtp");
+      return res.redirect("/admin/settings");
     }
 
     db.prepare(
@@ -1497,7 +1517,7 @@ router.post("/smtp/test", async (req, res) => {
       "success",
       `SMTP test accepted by server for ${testTo}. Message ID: ${testResult.details?.messageId || "n/a"}`
     );
-    return res.redirect("/admin/smtp");
+    return res.redirect("/admin/settings");
   } catch (err) {
     db.prepare(
       `INSERT INTO email_audit_logs (event_type, status, recipient_email, subject, error_message, actor_user_id)
@@ -1505,9 +1525,12 @@ router.post("/smtp/test", async (req, res) => {
     ).run(testTo, String(err?.message || err), req.currentUser.id);
 
     setFlash(req, "error", `SMTP test failed: ${String(err?.message || err)}`);
-    return res.redirect("/admin/smtp");
+    return res.redirect("/admin/settings");
   }
 });
+
+router.post("/smtp", (_req, res) => res.redirect(307, "/admin/settings/smtp"));
+router.post("/smtp/test", (_req, res) => res.redirect(307, "/admin/settings/smtp/test"));
 
 router.post("/reset-matches", (req, res) => {
   const mentorId = Number(req.body.mentor_id || 0);
